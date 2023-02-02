@@ -181,38 +181,6 @@ write.table(kendall,"kendall.txt",sep="\t",dec=".") #also shows non_linear monot
 
 #
 par(mfrow=c(1,1))
-####all linear models
-pdf("linear_models.pdf")
-for (i in 1:ncol(env.data)) {
-  for(j in 1:ncol(div)) {
-    
-    ##plot(div[,y]~env.data[,i], xlab=colnames(env.data[,i]), ylab=colnames(div[,y]))
-    #   }}
-    mod <- lm(div[,j]~env.data[,i])
-    x<-summary(mod)
-    x<-as.numeric(unlist(x$coefficients[2,4]))
-    if (x<=0.05) {
-      y=if (x<=0.001) {as.character("<0.001***")} else if (x<=0.01) {as.character("<0.01**")
-      }else if (x<=0.05) {as.character("<0.05*")} else {as.character("=n.s.")}
-      plot(div[,j]~env.data[,i], xlab=colnames(env.data[i]), ylab=colnames(div[j]))
-      abline(mod, col="blue", lwd=3)
-      y<-as.character(y)
-      p<-("p")
-      p<-paste(p,y)
-      mtext(p, line=-1.5, adj = 1, cex = 1.2, font = 2)
-      r2 <-bquote(paste(bold(r^2 == .(round(summary(mod)$r.squared,2)))))
-      mtext(r2, line = -3, adj = 1, cex = 1.2, font = 2)
-      par(mfrow=c(2,2))
-      plot(mod)
-      par(mfrow=c(1,1))}
-    
-    #title(main="Diversity", xlab= colnames(env.data[i]), ylab=colnames(div[i][j]))
-    #axis(side=2, labels = colnames(div[y]), las=0)
-  }
-}
-
-
-dev.off()
 
 par(mfrow=c(1,1))
 library(mgcv)
