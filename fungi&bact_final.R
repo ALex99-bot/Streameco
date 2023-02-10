@@ -9,51 +9,25 @@ library(vegan)
 library(ade4)
 library(usdm)
 library(mgcv)
-
+library(readxl)
+library(tibble)
 
 # Loading data
-filenames <- list.files(directory, pattern="*riqueza.txt")
-all_txt <- lapply(filenames, read.csv, sep="\t", dec=",", header=T)
-names(all_txt) <- c("bact_genus", "bact_order", "bact_species", "fun_genus", "fun_order", "fun_species")
-invisible(lapply(names(all_txt), function(x) assign(x, all_txt[[x]], envir=.GlobalEnv)))
 
-filenames_reads <- list.files(directory, pattern="*reads.txt")
-all_txt <- lapply(filenames, read.csv, sep="\t", dec=",", header=T)
-names(all_txt) <- c("bact_genus_reads", "bact_order_reads", "bact_species_reads", "fun_genus_reads", "fun_order_reads", "fun_species_reads")
-invisible(lapply(names(all_txt), function(x) assign(x, all_txt[[x]], envir=.GlobalEnv)))
+my_sheet_names <- excel_sheets("total_reads.xlsx")
+my_sheets <- lapply(my_sheet_names, function(x) read_excel("total_reads.xlsx", sheet = x))
+names(my_sheets) <- my_sheet_names
 
-# taxa <- list(species)
-# taxa <- lapply(taxa,function(df){
-#   df <- df[nrow(df), ]        
-#   df <- df[, -c(1, 52)]
-#   df <- strtoi(df)
-#   df
-#   
-# })
+excel2dataframe <- function(x) {
+  x <- as.data.frame(x)
+  row.names(x) <- x[, 1]
+  x <- x[, -1]
+  x
+}
 
-div <- bact_species
-div <- div[6180,-c(1, 52)]
-View(div)
-# div = strtoi(div)
+new_list <- lapply(my_sheets, excel2dataframe)
 
-div = rbind(div, fun_species[999, -c(1, 52)])
-div = t(div)
-colnames(div) = c("bacteria", "fungi")
-div = as.data.frame(div)
-div$bacteria = as.numeric(as.character(div$bacteria)) 
-div$fungi = as.numeric(as.character(div$fungi))
-
-
-bact_reads = read.csv("Bacteria_species_reads.txt", sep="\t", dec=",", header=T)
-rownames(bact_reads) = bact_reads$species
-bact_reads = bact_reads[, -1]
-View(bact_reads)
-
-fung_reads = read.csv("Fungi_species_reads.txt", sep="\t", dec=",", header=T)
-rownames(fung_reads) = fung_reads$species
-fung_reads = fung_reads[, -1]
-View(fung_reads)
-
+list2env(new_list, envir=.GlobalEnv)
 
 
 # Índice de Shannnon e Simpson bactérias
@@ -156,3 +130,7 @@ nmds2 <- metaMDS(fun_reads, distance = "bray")
 nmds2
 
 plot(div$shannon_bact~env.data$mean.Velocity)
+
+
+
+
