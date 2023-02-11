@@ -1,7 +1,7 @@
 # setwd("C:/Users/asus/Desktop/Pedro Gonçalves Shotgun Method/Streameco")
 # directory="C:/Users/asus/Desktop/Pedro Gonçalves Shotgun Method/Streameco"
 
-directory = "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
+directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
 setwd(directory)
 
 # Loading packages
@@ -10,46 +10,47 @@ library(ade4)
 library(usdm)
 library(mgcv)
 library(readxl)
-library(tibble)
+library(mgcv)
+library(ggplot2)
+
 
 # Loading data
-
 my_sheet_names <- excel_sheets("total_reads.xlsx")
 my_sheets <- lapply(my_sheet_names, function(x) read_excel("total_reads.xlsx", sheet = x))
 names(my_sheets) <- my_sheet_names
 
-excel2dataframe <- function(x) {
+# Pôr nome da 1.ª coluna como nome das linhas
+tibble2dataframe <- function(x) {
   x <- as.data.frame(x)
   row.names(x) <- x[, 1]
   x <- x[, -1]
-  x
 }
 
-new_list <- lapply(my_sheets, excel2dataframe)
+new_list <- lapply(my_sheets, tibble2dataframe)
 
-list2env(new_list, envir=.GlobalEnv)
+list2env(new_list, envir = .GlobalEnv)
 
+nmds <- lapply(new_list, metaMDS, distance = "bray")
 
 # Índice de Shannnon e Simpson bactérias
-shannon_bact = diversity(t(bact_reads), index = "shannon", MARGIN = 1, base = exp(1))
-shannon_fung = diversity(t(fung_reads), index = "shannon", MARGIN = 1, base = exp(1))
+shannon_bact <- diversity(t(bact_reads), index = "shannon", MARGIN = 1, base = exp(1))
+shannon_fung <- diversity(t(fung_reads), index = "shannon", MARGIN = 1, base = exp(1))
 
 
 
-###bray curtis 1st axis of PCoA
+# bray curtis 1st axis of PCoA
 # Functional space
-bray_curtis_bact = vegdist(t(bact_reads), method = "bray")
+bray_curtis_bact <- vegdist(t(bact_reads), method = "bray")
 dudi.pco(bray_curtis_bact,scannf = F,nf=10)->tr.pco
 
 Bray_Curtis_bact<-tr.pco$li$A1
 
-###
-bray_curtis_fung = vegdist(t(fung_reads), method = "bray")
+bray_curtis_fung <- vegdist(t(fung_reads), method = "bray")
 dudi.pco(bray_curtis_fung,scannf = F,nf=10)->tr.pco2
 Bray_Curtis_fung<-tr.pco2$li$A1
 
-div = cbind(div, shannon_bact, Bray_Curtis_bact, shannon_fung, Bray_Curtis_fung)
-div=as.data.frame(div)
+div <- cbind(div, shannon_bact, Bray_Curtis_bact, shannon_fung, Bray_Curtis_fung)
+div <- as.data.frame(div)
 
 
 env.data <- read.table("var ambientais.txt", sep="\t", dec=".", header=T)
@@ -58,16 +59,16 @@ env.data <- env.data[, -1]
 View(env.data)
 
 
-library(mgcv)
-env.data=as.data.frame(env.data)
-env.data2=env.data[,c(12,25,32,37)]
-env.data=env.data[,-c(12,25,32,37)]
+
+env.data <- as.data.frame(env.data)
+env.data2 <- env.data[, c(12, 25, 32, 37)]
+env.data <- env.data[, -c(12, 25, 32, 37)]
 row.names(env.data2)<-row.names(env.data)
 
 
 
-div=as.data.frame(scale(div))
-env.data=env.data[,c(1,2,4,5,6,15,17,22,26,28,29,30,31)]
+div <- as.data.frame(scale(div))
+env.data <- env.data[, c(1, 2, 4, 5, 6, 15, 17, 22, 26, 28, 29, 30, 31)]
 env.data2 <- as.data.frame(scale(env.data))
 dudi.pca(env.data2, center = TRUE, scale = FALSE, scannf = F,nf=4)->metric.pca
 biplot(metric.pca)
@@ -75,8 +76,8 @@ metric.pca$li$Axis1 -> PCA1
 metric.pca$li$Axis2 -> PCA2
 # PCA Axis importance (explained variance)
 round(metric.pca$eig[1:4]/sum(metric.pca$eig),2)
-env.data = cbind(env.data, PCA1, PCA2)
-env.data = as.data.frame(scale(env.data))
+env.data <- cbind(env.data, PCA1, PCA2)
+env.data <- as.data.frame(scale(env.data))
 
 pdf("Gam_models.pdf")
 for (i in 1:length(env.data)) {
@@ -86,14 +87,14 @@ for (i in 1:length(env.data)) {
     print(i)
     gam<-gam(div[,j]~s(env.data[,i], fx = FALSE, k=-1,  bs = "cr"))
     x<-summary(gam)
-    p=as.character(round(as.numeric(unlist((x$s.table[,4]))),3))
+    p <- as.character(round(as.numeric(unlist((x$s.table[, 4]))), 3))
     if (p<=0.05) {
       plot(gam, main='Diversity', xlab=colnames(env.data[i]), ylab=colnames(div[j]), se=TRUE)
-      p=if (p<=0.001) {as.character("<0.001***")} else if (p<=0.01) {as.character("<0.01**")
+      p <- if (p<=0.001) {as.character("<0.001***")} else if (p<=0.01) {as.character("<0.01**")
       }else if (p<=0.05) {as.character("<0.05*")} else {as.character("=n.s.")}
-      p=paste("p",p)
+      p <- paste("p", p)
       r2 <-bquote(paste(bold(r^2 == .(as.character(round(as.numeric(x$r.sq),3))))))
-      dev=as.character(round(as.numeric(x$dev.expl),3))
+      dev <- as.character(round(as.numeric(x$dev.expl), 3))
       dev <-(paste("dev", "=",dev))
       mtext(p, line=-1.5, adj = 1, cex = 1.2, font = 2)
       mtext(r2, line=-2.5, adj = 1, cex = 1.2, font = 2)
@@ -126,11 +127,5 @@ legend("topright", legend = c(levels(dune.env$Management), levels(dune.env$Use))
 legend("topleft", "stress = 0.118", bty = "n", cex = 1) # displays legend text of stress value 
 ggrepel::geom_text_repel(data = sig.spp.scrs, aes(x=NMDS1, y=NMDS2, label = Species), cex = 3, direction = "both", segment.size = 0.25)
 
-nmds2 <- metaMDS(fun_reads, distance = "bray")
-nmds2
-
 plot(div$shannon_bact~env.data$mean.Velocity)
-
-
-
 
