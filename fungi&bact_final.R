@@ -52,7 +52,7 @@ prepare_nmds_data <- function(nmds) {
 # all_nmds <- lapply(nmds, prepare_nmds_data)
 all_nmds <- sapply(nmds, FUN = prepare_nmds_data, simplify = FALSE, USE.NAMES = TRUE)
 
-plot_data_column = function (data, df_name) {
+plot_text = function (data, df_name) {
     ggplot(data, aes(x=MDS1, y=MDS2)) +
     geom_text_repel(aes(color=name, label=row.names(data)))+labs(col="Legend")+
     guides(fill="name") +
@@ -61,8 +61,22 @@ plot_data_column = function (data, df_name) {
     scale_color_manual(values =c(Site="red",Species= "blue"))
 }
 
-myplots <- lapply(names(all_nmds), function(df_name) {
-  plot_data_column(all_nmds[[df_name]], df_name)
+scatter_plot = function (data) {
+  ggplot() +
+  geom_point(data = data, aes(x = MDS1, y = MDS2, color = name)) +
+  labs(col="Legend") +
+  guides(fill="name") +
+  theme_gray() +
+  labs(title="Bacteria_order_reads") +
+  scale_color_manual(values =c(Site="red",Species= "blue"))
+}
+
+myplots_text <- lapply(names(all_nmds), function(df_name) {
+  plot_text(all_nmds[[df_name]], df_name)
+})
+
+myplots_scatter <- lapply(names(all_nmds), function(df_name) {
+  plot_scatter(all_nmds[[df_name]], df_name)
 })
 
 pdf("NMDS.pdf")
