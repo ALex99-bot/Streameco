@@ -1,7 +1,11 @@
 # Set the directory and file name
 directory <- "/home/pedro/PycharmProjects/Streameco"
 file <- "total_reads.xlsx"
+file2 <- "top10.xlsx"
+file3 <- "menor_cutoff_reads.xlsx"
 path <- file.path(directory, file)
+path2 <- file.path(directory, file2)
+path3 <- file.path(directory, file3)
 setwd(directory)
 
 # Load the required packages
@@ -13,8 +17,9 @@ library(vegan)
 library(ggplot2)
 library(ggrepel)
 
-my_sheet_names <- excel_sheets(path)
-my_sheets <- lapply(my_sheet_names, function(x) read_excel(file, sheet = x))
+
+my_sheet_names <- excel_sheets(path3)
+my_sheets <- lapply(my_sheet_names, function(x) read_excel(file3, sheet = x))
 names(my_sheets) <- my_sheet_names
 
 excel2dataframe <- function(x) {
@@ -45,7 +50,6 @@ prepare_nmds_data <- function(nmds) {
   Site <- data.frame(nmds$points, name="Species")
   Species <- data.frame(nmds$species, name="Site")
   df <- rbind(Site, Species)
-
   return(df)
 }
 
@@ -58,17 +62,17 @@ plot_text = function (data, df_name) {
     guides(fill="name") +
     theme_gray() +
     labs(title=df_name)+
-    scale_color_manual(values =c(Site="red",Species= "blue"))
+    scale_color_manual(labels = c("Site", strsplit(df_name, split = "_")[[1]][2]), values = c("red", "blue"))
 }
 
-scatter_plot = function (data) {
+scatter_plot = function (data, df_name) {
   ggplot() +
   geom_point(data = data, aes(x = MDS1, y = MDS2, color = name)) +
-  labs(col="Legend") +
-  guides(fill="name") +
+  labs(col = "Legend") +
+  guides(fill = "name") +
   theme_gray() +
-  labs(title="Bacteria_order_reads") +
-  scale_color_manual(values =c(Site="red",Species= "blue"))
+  labs(title = df_name) +
+  scale_color_manual(labels = c("Site", strsplit(df_name, split = "_")[[1]][2]), values = c("red", "blue"))
 }
 
 myplots_text <- lapply(names(all_nmds), function(df_name) {
@@ -76,14 +80,22 @@ myplots_text <- lapply(names(all_nmds), function(df_name) {
 })
 
 myplots_scatter <- lapply(names(all_nmds), function(df_name) {
-  plot_scatter(all_nmds[[df_name]], df_name)
+  scatter_plot(all_nmds[[df_name]], df_name)
 })
 
-pdf("NMDS.pdf")
-for (i in 1:length(myplots)) {
-  print(myplots[[i]])
+pdf("menor_NMDS_nomes.pdf")
+for (i in 1:length(myplots_text)) {
+  print(myplots_text[[i]])
 }
 dev.off()
+
+pdf("menor_NMDS_disp.pdf")
+for (i in 1:length(myplots_scatter)) {
+  print(myplots_scatter[[i]])
+}
+dev.off()
+
+
 
 # # Índice de Shannnon e Simpson bactérias
 # shannon_bact <- diversity(t(bact_reads), index = "shannon", MARGIN = 1, base = exp(1))
