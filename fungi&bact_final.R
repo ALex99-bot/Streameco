@@ -1,5 +1,6 @@
 # Set the directory and file name
-directory <- "/home/pedro/PycharmProjects/Streameco"
+#directory <- "/home/pedro/PycharmProjects/Streameco"
+directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
 setwd(directory)
 
 file <- "total_reads.xlsx"
@@ -18,6 +19,7 @@ library(usdm)
 library(vegan)
 library(ggplot2)
 library(ggrepel)
+library(factoextra)
 
 read_excel_sheets <- function(path, file){
   my_sheet_names <- excel_sheets(path)
@@ -35,7 +37,7 @@ excel2dataframe <- function(x) {
 
 bact_fung_taxa <- lapply(read_excel_sheets(path, file), excel2dataframe)
 
-# list2env(bact_fung_taxa, envir=.GlobalEnv)
+list2env(bact_fung_taxa, envir=.GlobalEnv)
 
 # nmds <- lapply(new_list, metaMDS, distance = "bray")
 #
@@ -149,6 +151,48 @@ env.data <- as.data.frame(env.data)
 env.data2 <- env.data[, c(12, 25, 32, 37)]
 env.data <- env.data[, -c(12, 25, 32, 37)]
 row.names(env.data2) <- row.names(env.data)
+
+PCA_teste1 <- prcomp(env.data, scale = FALSE)
+PCA_teste3 <- prcomp(t(Bacteria_species_reads))
+a <- data.frame(especies_bact = PCA_teste3$x[,1], abiotico = PCA_teste1$x[,1])
+pdf("PCA_espécies_bactérias.pdf")
+
+fviz_eig(PCA_teste3)
+
+fviz_pca_ind(PCA_teste3,
+             col.ind = "cos2", # Color by the quality of representation
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE     # Avoid text overlapping
+)
+
+fviz_pca_var(PCA_teste3,
+             col.var = "contrib", # Color by contributions to the PC
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE     # Avoid text overlapping
+)
+
+ggplot(a, aes(x=abiotico, y=especies_bact)) + geom_point()
+dev.off()
+
+
+fviz_eig(PCA_teste1)
+fviz_pca_ind(PCA_teste1,
+             col.ind = "cos2", # Color by the quality of representation
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE     # Avoid text overlapping
+)
+
+fviz_pca_var(PCA_teste1,
+             col.var = "contrib", # Color by contributions to the PC
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE     # Avoid text overlapping
+)
+
+PCA_teste2 <- princomp(env.data, cor = FALSE, scores = TRUE)
+
+summary(PCA_teste3)
+
+
 
 
 matriz_final <- Reduce(function(df1, df2) cbind(df1, df2), shannon, init = env.data)
