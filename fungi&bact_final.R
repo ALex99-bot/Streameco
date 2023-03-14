@@ -1,14 +1,16 @@
 # Set the directory and file name
-#directory <- "/home/pedro/PycharmProjects/Streameco"
-directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
+directory <- "/home/pedro/PycharmProjects/Streameco"
+# directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
 setwd(directory)
 
 file <- "total_reads.xlsx"
 file2 <- "top10.xlsx"
 file3 <- "menor_cutoff_reads.xlsx"
+file4 <- "hyphomycetes_aquaticos.xlsx"
 path <- file.path(directory, file)
 path2 <- file.path(directory, file2)
 path3 <- file.path(directory, file3)
+path4 <- file.path(directory, file4)
 
 
 # Load the required packages
@@ -20,6 +22,9 @@ library(vegan)
 library(ggplot2)
 library(ggrepel)
 library(factoextra)
+library(xlsx)
+library(abdiv)
+library(dplyr)
 
 read_excel_sheets <- function(path, file){
   my_sheet_names <- excel_sheets(path)
@@ -35,7 +40,7 @@ excel2dataframe <- function(x) {
   x <- x[, -1]
 }
 
-bact_fung_taxa <- lapply(read_excel_sheets(path, file), excel2dataframe)
+bact_fung_taxa <- lapply(read_excel_sheets(path4, file4), excel2dataframe)
 
 list2env(bact_fung_taxa, envir=.GlobalEnv)
 
@@ -102,7 +107,7 @@ list2env(bact_fung_taxa, envir=.GlobalEnv)
 # }
 # dev.off()
 
-
+# Índice de Shannon
 shannon_by_column <- function(data, name) {
   # Create an empty data frame to store the results
   shannon_df <- data.frame(shannon = numeric(), row.names = character(), stringsAsFactors = FALSE)
@@ -118,44 +123,118 @@ shannon_by_column <- function(data, name) {
   return(shannon_df)
 }
 
-# Índice de Shannnon
+
 shannon <- lapply(names(bact_fung_taxa), function(df_name) {
   shannon_by_column(bact_fung_taxa[[df_name]], df_name)
 })
-# shannon_bact <- diversity(t(bact_reads), index = "shannon", MARGIN = 1, base = exp(1))
-# shannon_fung <- diversity(t(fung_reads), index = "shannon", MARGIN = 1, base = exp(1))
+
+# Índice de Pielou
+pielou_by_column <- function(data, name) {
+  # Create an empty data frame to store the results
+  pielou_df <- data.frame(pielou = numeric(), row.names = character(), stringsAsFactors = FALSE)
+  for(i in 1:ncol(data)) {       # for-loop over columns
+  pielou <- data.frame(pielou = diversity(t(data[,i]))/log(specnumber(t(data[,i]))),
+                         row.names = colnames(data)[i])
+  # Add the current result to the shannon_df data frame
+  pielou_df <- rbind(pielou_df, pielou)
+  }
+  # Name of dataframe
+  name_col <- paste("pielou_index", sub("_([^_]*)$", "", name), sep="_")
+  colnames(pielou_df)[1] <- name_col
+  return(pielou_df)
+}
+
+pielou <- lapply(names(bact_fung_taxa), function(df_name) {
+  pielou_by_column(bact_fung_taxa[[df_name]], df_name)
+})
+
+# Bray-Curtis
+bray <- lapply(bact_fung_taxa, function(x) vegdist(t(x)))
+
+# Jaccard
+jaccard <- lapply(bact_fung_taxa, function (x) vegdist(t(x), method = "jaccard"))
+
+# Margalef
+margalef_by_column <- function(data, name) {
+  # Create an empty data frame to store the results
+  margalef_df <- data.frame(margalef = numeric(), row.names = character(), stringsAsFactors = FALSE)
+  for(i in 1:ncol(data)) {       # for-loop over columns
+  margalef <- data.frame(margalef = margalef(data[, i]),
+                         row.names = colnames(data)[i])
+  # Add the current result to the shannon_df data frame
+  margalef_df <- rbind(margalef_df, margalef)
+  }
+  # Name of dataframe
+  name_col <- paste("margalef_index", sub("_([^_]*)$", "", name), sep="_")
+  colnames(margalef_df)[1] <- name_col
+  return(margalef_df)
+}
+
+margalef_ind <- lapply(names(bact_fung_taxa), function(df_name) {
+  margalef_by_column(bact_fung_taxa[[df_name]], df_name)
+})
+
+# Simpson
+simpson_by_column <- function(data, name) {
+  # Create an empty data frame to store the results
+  simpson_df <- data.frame(simpson = numeric(), row.names = character(), stringsAsFactors = FALSE)
+  for(i in 1:ncol(data)) {       # for-loop over columns
+  simpson <- data.frame(simpson = diversity(t(data[,i]), index = "simpson", MARGIN = 1, base = exp(1)),
+                         row.names = colnames(data)[i])
+  # Add the current result to the shannon_df data frame
+  simpson_df <- rbind(simpson_df, simpson)
+  }
+  # Name of dataframe
+  name_col <- paste("simpson_index", sub("_([^_]*)$", "", name), sep="_")
+  colnames(simpson_df)[1] <- name_col
+  return(simpson_df)
+}
 
 
-# bray curtis 1st axis of PCoA
-# Functional space
-bray_curtis <- lapply(t(bact_fung_taxa), vegdist, method = "bray")
-# _bact <- vegdist(t(bact_reads), method = "bray")
-# dudi.pco(bray_curtis_bact,scannf = F,nf=10)-> tr.pco
-#
-# Bray_Curtis_bact <- tr.pco$li$A1
-#
-# bray_curtis_fung <- vegdist(t(fung_reads), method = "bray")
-# dudi.pco(bray_curtis_fung,scannf = F,nf=10) -> tr.pco2
-# Bray_Curtis_fung<-tr.pco2$li$A1
-#
-# div <- cbind(div, shannon_bact, Bray_Curtis_bact, shannon_fung, Bray_Curtis_fung)
-# div <- as.data.frame(div)
-#
-#
+simpson_ind <- lapply(names(bact_fung_taxa), function(df_name) {
+  simpson_by_column(bact_fung_taxa[[df_name]], df_name)
+})
+
+# Guardar excel dos índices
+wb = createWorkbook()
+
+sheet = createSheet(wb, "shannon")
+
+addDataFrame(Reduce(merge, lapply(shannon, function(x) data.frame(x, site = row.names(x)))), sheet=sheet, startColumn=1, row.names=FALSE)
+
+sheet = createSheet(wb, "pielou")
+
+addDataFrame(Reduce(merge, lapply(pielou, function(x) data.frame(x, site = row.names(x)))), sheet=sheet, startColumn=1, row.names=FALSE)
+
+sheet = createSheet(wb, "margalef")
+
+addDataFrame(Reduce(merge, lapply(margalef_ind, function(x) data.frame(x, site = row.names(x)))), sheet=sheet, startColumn=1, row.names=FALSE)
+
+sheet = createSheet(wb, "simpson")
+
+addDataFrame(Reduce(merge, lapply(simpson_ind, function(x) data.frame(x, site = row.names(x)))), sheet=sheet, startColumn=1, row.names=FALSE)
+
+saveWorkbook(wb, "bioindices.xlsx")
+
+# Variáveis ambientais
 env.data <- read.table("var ambientais.txt", sep="\t", dec=".", header=T)
 row.names(env.data) <- env.data$code
 env.data <- env.data[, -1]
-View(env.data)
-
 env.data <- as.data.frame(env.data)
-env.data2 <- env.data[, c(12, 25, 32, 37)]
-env.data <- env.data[, -c(12, 25, 32, 37)]
+env.data2 <- env.data[, c(12, 23, 24, 25, 27, 28, 32, 37)]
+env.data <- env.data[, -c(12, 23, 24, 25, 27, 28, 32, 37)]
 row.names(env.data2) <- row.names(env.data)
 
+env.data <- env.data[-40,]
+# matriz_final <- Reduce(function(df1, df2) cbind(df1, df2), shannon, init = env.data)
+# indices <- Reduce(function(df1, df2) cbind(df1, df2), shannon, init = matriz_final)
+# indices <- indices[,-1:-31]
+
 PCA_teste1 <- prcomp(env.data, scale = FALSE)
-PCA_teste3 <- prcomp(t(Bacteria_species_reads))
+PCA_teste3 <- prcomp(t(Sheet1))
 a <- data.frame(especies_bact = PCA_teste3$x[,1], abiotico = PCA_teste1$x[,1])
-pdf("PCA_espécies_bactérias.pdf")
+
+pdf("PCA_hyphomycetes.pdf")
 
 fviz_eig(PCA_teste3)
 
@@ -171,7 +250,12 @@ fviz_pca_var(PCA_teste3,
              repel = TRUE     # Avoid text overlapping
 )
 
-ggplot(a, aes(x=abiotico, y=especies_bact)) + geom_point()
+ggplot(a, aes(x=abiotico, y=especies_bact)) +
+  geom_point() +
+  geom_text(aes(label = rownames(a)), size = 2.5, nudge_x = 1, nudge_y = 1.2) +
+  labs(x="Environmental variables", y="Aquatic Hyphomycetes") +
+  theme(legend.position = "none")
+
 dev.off()
 
 
@@ -188,14 +272,14 @@ fviz_pca_var(PCA_teste1,
              repel = TRUE     # Avoid text overlapping
 )
 
-PCA_teste2 <- princomp(env.data, cor = FALSE, scores = TRUE)
+# PCA_teste2 <- princomp(env.data, cor = FALSE, scores = TRUE)
 
 summary(PCA_teste3)
 
 
 
 
-matriz_final <- Reduce(function(df1, df2) cbind(df1, df2), shannon, init = env.data)
+
 
 
 # div <- as.data.frame(scale(div))
