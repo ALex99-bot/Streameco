@@ -19,6 +19,7 @@ library(mgcv)
 library(ade4)
 library(usdm)
 library(vegan)
+library(purrr)
 library(ggplot2)
 library(ggrepel)
 library(factoextra)
@@ -196,23 +197,27 @@ simpson_ind <- lapply(names(bact_fung_taxa), function(df_name) {
 })
 
 # Guardar excel dos índices
-wb = createWorkbook()
+wb <- createWorkbook()
 
-sheet = createSheet(wb, "shannon")
+sheet <- createSheet(wb, "shannon")
 
-addDataFrame(Reduce(merge, lapply(shannon, function(x) data.frame(x, site = row.names(x)))), sheet=sheet, startColumn=1, row.names=FALSE)
+addDataFrame(Reduce(merge, lapply(shannon, function(x) data.frame(x, site = row.names(x)))), sheet=sheet,
+             startColumn=1, row.names=FALSE)
 
-sheet = createSheet(wb, "pielou")
+sheet <- createSheet(wb, "pielou")
 
-addDataFrame(Reduce(merge, lapply(pielou, function(x) data.frame(x, site = row.names(x)))), sheet=sheet, startColumn=1, row.names=FALSE)
+addDataFrame(Reduce(merge, lapply(pielou, function(x) data.frame(x, site = row.names(x)))), sheet=sheet,
+             startColumn=1, row.names=FALSE)
 
-sheet = createSheet(wb, "margalef")
+sheet <- createSheet(wb, "margalef")
 
-addDataFrame(Reduce(merge, lapply(margalef_ind, function(x) data.frame(x, site = row.names(x)))), sheet=sheet, startColumn=1, row.names=FALSE)
+addDataFrame(Reduce(merge, lapply(margalef_ind, function(x) data.frame(x, site = row.names(x)))), sheet=sheet,
+             startColumn=1, row.names=FALSE)
 
-sheet = createSheet(wb, "simpson")
+sheet <- createSheet(wb, "simpson")
 
-addDataFrame(Reduce(merge, lapply(simpson_ind, function(x) data.frame(x, site = row.names(x)))), sheet=sheet, startColumn=1, row.names=FALSE)
+addDataFrame(Reduce(merge, lapply(simpson_ind, function(x) data.frame(x, site = row.names(x)))), sheet=sheet,
+             startColumn=1, row.names=FALSE)
 
 saveWorkbook(wb, "bioindices.xlsx")
 
@@ -230,12 +235,21 @@ env.data <- env.data[-40,]
 # indices <- Reduce(function(df1, df2) cbind(df1, df2), shannon, init = matriz_final)
 # indices <- indices[,-1:-31]
 
-PCA_teste1 <- prcomp(env.data, scale = FALSE)
-PCA_teste3 <- prcomp(t(Sheet1))
-a <- data.frame(especies_bact = PCA_teste3$x[,1], abiotico = PCA_teste1$x[,1])
+
+PCA_env <- prcomp(env_data, scale = FALSE)
+PCA_ind <- function(ind) prcomp(t(ind))
+pcas <- lapply(shannon, PCA_ind)
+
+PCA_dataframe <- map2(pcas, PCA_env, function(pca, env) {
+  data.frame(bioindex = pca$x[,1], environmental_data = env$x[,1])
+})
+
+# a <- data.frame(bioindex = PCA_ind$x[,1], environmental_data = PCA_env$x[,1])
+
+
 
 pdf("PCA_hyphomycetes.pdf")
-
+for (i in i:length(pcas)) {
 fviz_eig(PCA_teste3)
 
 fviz_pca_ind(PCA_teste3,
@@ -255,7 +269,7 @@ ggplot(a, aes(x=abiotico, y=especies_bact)) +
   geom_text(aes(label = rownames(a)), size = 2.5, nudge_x = 1, nudge_y = 1.2) +
   labs(x="Environmental variables", y="Aquatic Hyphomycetes") +
   theme(legend.position = "none")
-
+}
 dev.off()
 
 
