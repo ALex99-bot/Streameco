@@ -1,6 +1,6 @@
 # Set the directory and file name
-# directory <- "/home/pedro/PycharmProjects/Streameco"
-directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
+directory <- "/home/pedro/PycharmProjects/Streameco"
+# directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
 setwd(directory)
 
 file <- "total_reads.xlsx"
@@ -41,7 +41,7 @@ excel2dataframe <- function(x) {
   x <- x[, -1]
 }
 
-bact_fung_taxa <- lapply(read_excel_sheets(path2, file2), excel2dataframe)
+bact_fung_taxa <- lapply(read_excel_sheets(path, file), excel2dataframe)
 
 # list2env(bact_fung_taxa, envir=.GlobalEnv)
 
@@ -109,117 +109,117 @@ bact_fung_taxa <- lapply(read_excel_sheets(path2, file2), excel2dataframe)
 # dev.off()
 
 # Índice de Shannon
-shannon_by_column <- function(data, name) {
-  # Create an empty data frame to store the results
-  shannon_df <- data.frame(shannon = numeric(), row.names = character(), stringsAsFactors = FALSE)
-  for(i in 1:ncol(data)) {       # for-loop over columns
-  shannon <- data.frame(shannon = diversity(t(data[,i]), index = "shannon", MARGIN = 1, base = exp(1)),
-                         row.names = colnames(data)[i])
-  # Add the current result to the shannon_df data frame
-  shannon_df <- rbind(shannon_df, shannon)
-  }
-  # Name of dataframe
-  name_col <- paste("shannon_index", sub("_([^_]*)$", "", name), sep="_")
-  colnames(shannon_df)[1] <- name_col
-  return(shannon_df)
-}
-
-
-shannon <- lapply(names(bact_fung_taxa), function(df_name) {
-  shannon_by_column(bact_fung_taxa[[df_name]], df_name)
-})
-
-# Índice de Pielou
-pielou_by_column <- function(data, name) {
-  # Create an empty data frame to store the results
-  pielou_df <- data.frame(pielou = numeric(), row.names = character(), stringsAsFactors = FALSE)
-  for(i in 1:ncol(data)) {       # for-loop over columns
-  pielou <- data.frame(pielou = diversity(t(data[,i]))/log(specnumber(t(data[,i]))),
-                         row.names = colnames(data)[i])
-  # Add the current result to the shannon_df data frame
-  pielou_df <- rbind(pielou_df, pielou)
-  }
-  # Name of dataframe
-  name_col <- paste("pielou_index", sub("_([^_]*)$", "", name), sep="_")
-  colnames(pielou_df)[1] <- name_col
-  return(pielou_df)
-}
-
-pielou <- lapply(names(bact_fung_taxa), function(df_name) {
-  pielou_by_column(bact_fung_taxa[[df_name]], df_name)
-})
-
-# Bray-Curtis
-bray <- lapply(bact_fung_taxa, function(x) vegdist(t(x)))
-
-# Jaccard
-jaccard <- lapply(bact_fung_taxa, function (x) vegdist(t(x), method = "jaccard"))
-
-# Margalef
-margalef_by_column <- function(data, name) {
-  # Create an empty data frame to store the results
-  margalef_df <- data.frame(margalef = numeric(), row.names = character(), stringsAsFactors = FALSE)
-  for(i in 1:ncol(data)) {       # for-loop over columns
-  margalef <- data.frame(margalef = margalef(data[, i]),
-                         row.names = colnames(data)[i])
-  # Add the current result to the shannon_df data frame
-  margalef_df <- rbind(margalef_df, margalef)
-  }
-  # Name of dataframe
-  name_col <- paste("margalef_index", sub("_([^_]*)$", "", name), sep="_")
-  colnames(margalef_df)[1] <- name_col
-  return(margalef_df)
-}
-
-margalef_ind <- lapply(names(bact_fung_taxa), function(df_name) {
-  margalef_by_column(bact_fung_taxa[[df_name]], df_name)
-})
-
-# Simpson
-simpson_by_column <- function(data, name) {
-  # Create an empty data frame to store the results
-  simpson_df <- data.frame(simpson = numeric(), row.names = character(), stringsAsFactors = FALSE)
-  for(i in 1:ncol(data)) {       # for-loop over columns
-  simpson <- data.frame(simpson = diversity(t(data[,i]), index = "simpson", MARGIN = 1, base = exp(1)),
-                         row.names = colnames(data)[i])
-  # Add the current result to the shannon_df data frame
-  simpson_df <- rbind(simpson_df, simpson)
-  }
-  # Name of dataframe
-  name_col <- paste("simpson_index", sub("_([^_]*)$", "", name), sep="_")
-  colnames(simpson_df)[1] <- name_col
-  return(simpson_df)
-}
-
-
-simpson_ind <- lapply(names(bact_fung_taxa), function(df_name) {
-  simpson_by_column(bact_fung_taxa[[df_name]], df_name)
-})
-
-# Guardar excel dos índices
-wb <- createWorkbook()
-
-sheet <- createSheet(wb, "shannon")
-
-addDataFrame(Reduce(merge, lapply(shannon, function(x) data.frame(x, site = row.names(x)))), sheet=sheet,
-             startColumn=1, row.names=FALSE)
-
-sheet <- createSheet(wb, "pielou")
-
-addDataFrame(Reduce(merge, lapply(pielou, function(x) data.frame(x, site = row.names(x)))), sheet=sheet,
-             startColumn=1, row.names=FALSE)
-
-sheet <- createSheet(wb, "margalef")
-
-addDataFrame(Reduce(merge, lapply(margalef_ind, function(x) data.frame(x, site = row.names(x)))), sheet=sheet,
-             startColumn=1, row.names=FALSE)
-
-sheet <- createSheet(wb, "simpson")
-
-addDataFrame(Reduce(merge, lapply(simpson_ind, function(x) data.frame(x, site = row.names(x)))), sheet=sheet,
-             startColumn=1, row.names=FALSE)
-
-saveWorkbook(wb, "bioindices.xlsx")
+# shannon_by_column <- function(data, name) {
+#   # Create an empty data frame to store the results
+#   shannon_df <- data.frame(shannon = numeric(), row.names = character(), stringsAsFactors = FALSE)
+#   for(i in 1:ncol(data)) {       # for-loop over columns
+#   shannon <- data.frame(shannon = diversity(t(data[,i]), index = "shannon", MARGIN = 1, base = exp(1)),
+#                          row.names = colnames(data)[i])
+#   # Add the current result to the shannon_df data frame
+#   shannon_df <- rbind(shannon_df, shannon)
+#   }
+#   # Name of dataframe
+#   name_col <- paste("shannon_index", sub("_([^_]*)$", "", name), sep="_")
+#   colnames(shannon_df)[1] <- name_col
+#   return(shannon_df)
+# }
+#
+#
+# shannon <- lapply(names(bact_fung_taxa), function(df_name) {
+#   shannon_by_column(bact_fung_taxa[[df_name]], df_name)
+# })
+#
+# # Índice de Pielou
+# pielou_by_column <- function(data, name) {
+#   # Create an empty data frame to store the results
+#   pielou_df <- data.frame(pielou = numeric(), row.names = character(), stringsAsFactors = FALSE)
+#   for(i in 1:ncol(data)) {       # for-loop over columns
+#   pielou <- data.frame(pielou = diversity(t(data[,i]))/log(specnumber(t(data[,i]))),
+#                          row.names = colnames(data)[i])
+#   # Add the current result to the shannon_df data frame
+#   pielou_df <- rbind(pielou_df, pielou)
+#   }
+#   # Name of dataframe
+#   name_col <- paste("pielou_index", sub("_([^_]*)$", "", name), sep="_")
+#   colnames(pielou_df)[1] <- name_col
+#   return(pielou_df)
+# }
+#
+# pielou <- lapply(names(bact_fung_taxa), function(df_name) {
+#   pielou_by_column(bact_fung_taxa[[df_name]], df_name)
+# })
+#
+# # Bray-Curtis
+# bray <- lapply(bact_fung_taxa, function(x) vegdist(t(x)))
+#
+# # Jaccard
+# jaccard <- lapply(bact_fung_taxa, function (x) vegdist(t(x), method = "jaccard"))
+#
+# # Margalef
+# margalef_by_column <- function(data, name) {
+#   # Create an empty data frame to store the results
+#   margalef_df <- data.frame(margalef = numeric(), row.names = character(), stringsAsFactors = FALSE)
+#   for(i in 1:ncol(data)) {       # for-loop over columns
+#   margalef <- data.frame(margalef = margalef(data[, i]),
+#                          row.names = colnames(data)[i])
+#   # Add the current result to the shannon_df data frame
+#   margalef_df <- rbind(margalef_df, margalef)
+#   }
+#   # Name of dataframe
+#   name_col <- paste("margalef_index", sub("_([^_]*)$", "", name), sep="_")
+#   colnames(margalef_df)[1] <- name_col
+#   return(margalef_df)
+# }
+#
+# margalef_ind <- lapply(names(bact_fung_taxa), function(df_name) {
+#   margalef_by_column(bact_fung_taxa[[df_name]], df_name)
+# })
+#
+# # Simpson
+# simpson_by_column <- function(data, name) {
+#   # Create an empty data frame to store the results
+#   simpson_df <- data.frame(simpson = numeric(), row.names = character(), stringsAsFactors = FALSE)
+#   for(i in 1:ncol(data)) {       # for-loop over columns
+#   simpson <- data.frame(simpson = diversity(t(data[,i]), index = "simpson", MARGIN = 1, base = exp(1)),
+#                          row.names = colnames(data)[i])
+#   # Add the current result to the shannon_df data frame
+#   simpson_df <- rbind(simpson_df, simpson)
+#   }
+#   # Name of dataframe
+#   name_col <- paste("simpson_index", sub("_([^_]*)$", "", name), sep="_")
+#   colnames(simpson_df)[1] <- name_col
+#   return(simpson_df)
+# }
+#
+#
+# simpson_ind <- lapply(names(bact_fung_taxa), function(df_name) {
+#   simpson_by_column(bact_fung_taxa[[df_name]], df_name)
+# })
+#
+# # Guardar excel dos índices
+# wb <- createWorkbook()
+#
+# sheet <- createSheet(wb, "shannon")
+#
+# addDataFrame(Reduce(merge, lapply(shannon, function(x) data.frame(x, site = row.names(x)))), sheet=sheet,
+#              startColumn=1, row.names=FALSE)
+#
+# sheet <- createSheet(wb, "pielou")
+#
+# addDataFrame(Reduce(merge, lapply(pielou, function(x) data.frame(x, site = row.names(x)))), sheet=sheet,
+#              startColumn=1, row.names=FALSE)
+#
+# sheet <- createSheet(wb, "margalef")
+#
+# addDataFrame(Reduce(merge, lapply(margalef_ind, function(x) data.frame(x, site = row.names(x)))), sheet=sheet,
+#              startColumn=1, row.names=FALSE)
+#
+# sheet <- createSheet(wb, "simpson")
+#
+# addDataFrame(Reduce(merge, lapply(simpson_ind, function(x) data.frame(x, site = row.names(x)))), sheet=sheet,
+#              startColumn=1, row.names=FALSE)
+#
+# saveWorkbook(wb, "bioindices.xlsx")
 
 # Variáveis ambientais
 env.data <- read.table("var ambientais.txt", sep="\t", dec=".", header=T)
@@ -231,7 +231,7 @@ env_data <- env.data[, -c(12, 23, 24, 25, 27, 28, 32, 37)]
 row.names(env.data2) <- row.names(env_data)
 
 # Apenas para hyphomycetes
-# env.data <- env.data[-40,]
+# env_data <- env_data[-40,]
 
 # matriz_final <- Reduce(function(df1, df2) cbind(df1, df2), shannon, init = env.data)
 # indices <- Reduce(function(df1, df2) cbind(df1, df2), shannon, init = matriz_final)
@@ -247,7 +247,7 @@ margalef_index <- lapply(bact_fung_taxa, function (x) apply(x, 2, margalef))
 simpson_index <- lapply(bact_fung_taxa, function (x) diversity(t(x), index = "simpson", MARGIN = 1, base = exp(1)))
 
 PCA_env <- rep(list(prcomp(env_data, scale = FALSE)), times = 12)
-PCA_dataframe <- map2(shannon_index, PCA_env, function(ind, env) {
+PCA_dataframe <- map2(simpson_index, PCA_env, function(ind, env) {
   data.frame(bioindex = ind, environmental_data = env$x[,1])
 })
 
@@ -257,13 +257,13 @@ all_graphs <- lapply(seq_along(PCA_dataframe), function (i) {
   ggplot(all_dataframe, aes(x=environmental_data, y=bioindex)) +
     geom_point() +
     # geom_text(aes(label = rownames(all_dataframe))) +
-    geom_text(aes(label = rownames(all_dataframe)), size = 2, nudge_x = 1, nudge_y = 0.025) +
+    geom_text(aes(label = rownames(all_dataframe)), size = 2, nudge_x = 1, nudge_y = 0.002) +
     ggtitle(names(PCA_dataframe)[i]) +  # add the dataframe name as the plot title
-    labs(x="Environmental variables", y="Shannon index") +
+    labs(x="Environmental variables", y="Simpson index") +
     theme(legend.position = "none")
 })
 
-pdf("PCA_shannon.pdf")
+pdf("PCA_simpson.pdf")
 for (i in 1:length(all_graphs)) {
   print(all_graphs[[i]])
 }
