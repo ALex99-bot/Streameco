@@ -1,6 +1,6 @@
 # Set the directory and file name
-directory <- "/home/pedro/PycharmProjects/Streameco"
-# directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
+# directory <- "/home/pedro/PycharmProjects/Streameco"
+directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
 setwd(directory)
 
 file <- "total_reads.xlsx"
@@ -41,7 +41,7 @@ excel2dataframe <- function(x) {
   x <- x[, -1]
 }
 
-bact_fung_taxa <- lapply(read_excel_sheets(path, file), excel2dataframe)
+bact_fung_taxa <- lapply(read_excel_sheets(path4, file4), excel2dataframe)
 
 # list2env(bact_fung_taxa, envir=.GlobalEnv)
 
@@ -246,8 +246,10 @@ margalef_index <- lapply(bact_fung_taxa, function (x) apply(x, 2, margalef))
 
 simpson_index <- lapply(bact_fung_taxa, function (x) diversity(t(x), index = "simpson", MARGIN = 1, base = exp(1)))
 
-PCA_env <- rep(list(prcomp(env_data, scale = FALSE)), times = 12)
-PCA_dataframe <- map2(simpson_index, PCA_env, function(ind, env) {
+
+PCA_env <- function(n_times=12) {rep(list(prcomp(env_data, scale = FALSE)), times = n_times)}
+# Para hifomicetes, mudar n_times=1
+PCA_dataframe <- map2(margalef_index, PCA_env, function(ind, env) {
   data.frame(bioindex = ind, environmental_data = env$x[,1])
 })
 
@@ -257,13 +259,13 @@ all_graphs <- lapply(seq_along(PCA_dataframe), function (i) {
   ggplot(all_dataframe, aes(x=environmental_data, y=bioindex)) +
     geom_point() +
     # geom_text(aes(label = rownames(all_dataframe))) +
-    geom_text(aes(label = rownames(all_dataframe)), size = 2, nudge_x = 1, nudge_y = 0.002) +
+    geom_text(aes(label = rownames(all_dataframe)), size = 2, nudge_x = 1, nudge_y = 0.03) +
     ggtitle(names(PCA_dataframe)[i]) +  # add the dataframe name as the plot title
-    labs(x="Environmental variables", y="Simpson index") +
+    labs(x="Environmental variables", y="Margalef index") +
     theme(legend.position = "none")
 })
 
-pdf("PCA_simpson.pdf")
+pdf("PCA_margalef_hyphomycetes.pdf")
 for (i in 1:length(all_graphs)) {
   print(all_graphs[[i]])
 }
