@@ -152,8 +152,6 @@ bact_fung_taxa <- lapply(read_excel_sheets(path, file), excel2dataframe)
 # # Bray-Curtis
 # bray <- lapply(bact_fung_taxa, function(x) vegdist(t(x)))
 #
-# # Jaccard
-# jaccard <- lapply(bact_fung_taxa, function (x) vegdist(t(x), method = "jaccard"))
 #
 # # Margalef
 # margalef_by_column <- function(data, name) {
