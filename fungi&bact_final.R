@@ -225,10 +225,13 @@ bact_fung_taxa <- lapply(read_excel_sheets(path, file), excel2dataframe)
 env.data <- read.table("var ambientais.txt", sep="\t", dec=".", header=T)
 row.names(env.data) <- env.data$code
 env.data <- env.data[, -1]
-env.data <- as.data.frame(env.data)
-env.data2 <- env.data[, c(12, 23, 24, 25, 27, 28, 32, 37)]
-env_data <- env.data[, -c(12, 23, 24, 25, 27, 28, 32, 37)]
-row.names(env.data2) <- row.names(env_data)
+env_data <- as.data.frame(env.data)
+to_remove <- c("mean_light", "Artificial.500m.", "Agriculture.500m.", "Pasture.500m.", "Natural.500m.", "N.NH4", "N.NO2",
+               "N.NO3", "Tmean", "Tmin", "TCV", "DOmean", "Domax", "Artificial.100m.", "Agriculture.100m.", "Pasture.100m.",
+               "Natural.100m.", "Artificial_subasin", "Agriculture_subasin", "Pasture_subasin", "Natural_subasin")
+env_data <- env_data[ , !(names(env_data) %in% to_remove)]
+# env.data2 <- env.data[, c(12, 23, 24, 25, 27, 28, 32, 37)]
+# row.names(env.data2) <- row.names(env_data)
 
 # Apenas para hyphomycetes
 # env_data <- env_data[-40,]
@@ -246,9 +249,8 @@ margalef_index <- lapply(bact_fung_taxa, function(x) apply(x, 2, margalef))
 
 simpson_index <- lapply(bact_fung_taxa, function(x) diversity(t(x), index = "simpson", MARGIN = 1, base = exp(1)))
 
-
+# Para hifomicetes, mudar times=1
 PCA_env <- rep(list(prcomp(env_data, scale = TRUE)), times = 12)
-# Para hifomicetes, mudar n_times=1
 PCA_dataframe <- map2(shannon_index, PCA_env, function(ind, env) {
   data.frame(bioindex = ind, environmental_data = env$x[,1])
 })
