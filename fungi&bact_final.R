@@ -41,7 +41,7 @@ excel2dataframe <- function(x) {
   x <- x[, -1]
 }
 
-bact_fung_taxa <- lapply(read_excel_sheets(path4, file4), excel2dataframe)
+bact_fung_taxa <- lapply(read_excel_sheets(path, file), excel2dataframe)
 
 # list2env(bact_fung_taxa, envir=.GlobalEnv)
 
@@ -240,32 +240,32 @@ row.names(env.data2) <- row.names(env_data)
 
 shannon_index <- lapply(bact_fung_taxa, function(x) diversity(t(x), index = "shannon", base = exp(1)))
 
-pielou_index <- lapply(bact_fung_taxa, function (x) diversity(t(x))/log(specnumber(t(x))))
+pielou_index <- lapply(bact_fung_taxa, function(x) diversity(t(x))/log(specnumber(t(x))))
 
-margalef_index <- lapply(bact_fung_taxa, function (x) apply(x, 2, margalef))
+margalef_index <- lapply(bact_fung_taxa, function(x) apply(x, 2, margalef))
 
-simpson_index <- lapply(bact_fung_taxa, function (x) diversity(t(x), index = "simpson", MARGIN = 1, base = exp(1)))
+simpson_index <- lapply(bact_fung_taxa, function(x) diversity(t(x), index = "simpson", MARGIN = 1, base = exp(1)))
 
 
-PCA_env <- function(n_times=12) {rep(list(prcomp(env_data, scale = FALSE)), times = n_times)}
+PCA_env <- rep(list(prcomp(env_data, scale = TRUE)), times = 12)
 # Para hifomicetes, mudar n_times=1
-PCA_dataframe <- map2(margalef_index, PCA_env, function(ind, env) {
+PCA_dataframe <- map2(shannon_index, PCA_env, function(ind, env) {
   data.frame(bioindex = ind, environmental_data = env$x[,1])
 })
 
 
-all_graphs <- lapply(seq_along(PCA_dataframe), function (i) {
+all_graphs <- lapply(seq_along(PCA_dataframe), function(i) {
   all_dataframe <- PCA_dataframe[[i]]
   ggplot(all_dataframe, aes(x=environmental_data, y=bioindex)) +
     geom_point() +
     # geom_text(aes(label = rownames(all_dataframe))) +
     geom_text(aes(label = rownames(all_dataframe)), size = 2, nudge_x = 1, nudge_y = 0.03) +
     ggtitle(names(PCA_dataframe)[i]) +  # add the dataframe name as the plot title
-    labs(x="Environmental variables", y="Margalef index") +
+    labs(x="Environmental variables", y="Shannon index") +
     theme(legend.position = "none")
 })
 
-pdf("PCA_margalef_hyphomycetes.pdf")
+pdf("PCA_shannon.pdf")
 for (i in 1:length(all_graphs)) {
   print(all_graphs[[i]])
 }
