@@ -45,8 +45,8 @@ bact_fung_taxa <- lapply(read_excel_sheets(path, file), excel2dataframe)
 
 # list2env(bact_fung_taxa, envir=.GlobalEnv)
 
-# nmds <- lapply(new_list, metaMDS, distance = "bray")
-#
+# nmds <- lapply(bact_fung_taxa, metaMDS, distance = "bray")
+
 # # organise4plot <- function (nmds) {
 # #   Site <- as.data.frame(nmds$points)
 # #   Site <- as.data.frame(cbind(Site, name="Species"))
