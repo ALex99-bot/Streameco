@@ -248,10 +248,31 @@ margalef_index <- lapply(bact_fung_taxa, function(x) apply(x, 2, margalef))
 simpson_index <- lapply(bact_fung_taxa, function(x) diversity(t(x), index = "simpson", MARGIN = 1, base = exp(1)))
 
 # Para hifomicetes, mudar times=1
-PCA_env <- rep(list(prcomp(env_data, scale = TRUE)), times = 12)
+PCA_env <- prcomp(env_data, scale = TRUE)
 PCA_dataframe <- map2(shannon_index, PCA_env, function(ind, env) {
   data.frame(bioindex = ind, environmental_data = env$x[,1])
 })
+
+# jpeg("pca_env.jpg")
+fviz_eig(PCA_env)
+fviz_pca_ind(PCA_env,
+             col.ind = "cos2", # Color by the quality of representation
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE     # Avoid text overlapping
+             )
+
+fviz_pca_var(PCA_env,
+             col.var = "contrib", # Color by contributions to the PC
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE     # Avoid text overlapping
+             )
+
+fviz_pca_biplot(PCA_env, repel = TRUE,
+                col.var = "#2E9FDF", # Variables color
+                col.ind = "#696969"  # Individuals color
+                )
+
+# dev.off()
 
 
 all_graphs <- lapply(seq_along(PCA_dataframe), function(i) {
