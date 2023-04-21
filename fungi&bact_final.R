@@ -26,6 +26,7 @@ library(factoextra)
 library(xlsx)
 library(abdiv)
 library(dplyr)
+library(ggpmisc)
 
 read_excel_sheets <- function(path, file){
   my_sheet_names <- excel_sheets(path)
@@ -194,32 +195,47 @@ bact_fung_taxa <- lapply(read_excel_sheets(path, file), excel2dataframe)
 #   simpson_by_column(bact_fung_taxa[[df_name]], df_name)
 # })
 #
-# # Guardar excel dos índices
+# # # Guardar excel dos índices
 # wb <- createWorkbook()
-#
+# #
 # sheet <- createSheet(wb, "shannon")
 #
-# addDataFrame(Reduce(merge, lapply(shannon, function(x) data.frame(x, site = row.names(x)))), sheet=sheet,
+# addDataFrame(shannon_index, sheet=sheet,
 #              startColumn=1, row.names=FALSE)
 #
 # sheet <- createSheet(wb, "pielou")
 #
-# addDataFrame(Reduce(merge, lapply(pielou, function(x) data.frame(x, site = row.names(x)))), sheet=sheet,
+# addDataFrame(pielou_index, sheet=sheet,
 #              startColumn=1, row.names=FALSE)
 #
 # sheet <- createSheet(wb, "margalef")
 #
-# addDataFrame(Reduce(merge, lapply(margalef_ind, function(x) data.frame(x, site = row.names(x)))), sheet=sheet,
+# addDataFrame(margalef_index, sheet=sheet,
 #              startColumn=1, row.names=FALSE)
 #
 # sheet <- createSheet(wb, "simpson")
 #
-# addDataFrame(Reduce(merge, lapply(simpson_ind, function(x) data.frame(x, site = row.names(x)))), sheet=sheet,
+# addDataFrame(simpson_index, sheet=sheet,
 #              startColumn=1, row.names=FALSE)
 #
-# saveWorkbook(wb, "bioindices.xlsx")
+# sheet <- createSheet(wb,"div")
+#
+# addDataFrame(diversidade, sheet=sheet,
+#              startColumn=1, row.names=TRUE)
+#
+# saveWorkbook(wb, "bioindices2.xlsx")
 
 # Variáveis ambientais
+bacias <- read_excel("STREAMECO database - environment (copy).xlsx", "LandUse")
+bacias <- as.data.frame(bacias)
+river_basin <- bacias[2:nrow(bacias), 3]
+river_basin <- as.data.frame(river_basin)
+row.names(river_basin) <- bacias[2:51, 1]
+
+# ggplot(bacias, aes(lon, lat)) +
+#   geom_point() +
+#   geom_text_repel(aes(label = code))
+
 env.data <- read.table("var ambientais.txt", sep="\t", dec=".", header=T)
 row.names(env.data) <- env.data$code
 env.data <- env.data[, -1]
@@ -228,8 +244,29 @@ to_remove <- c("mean_light", "Artificial.500m.", "Agriculture.500m.", "Pasture.5
                "N.NO3", "Tmean", "Tmin", "TCV", "DOmean", "Domax", "Artificial.100m.", "Agriculture.100m.", "Pasture.100m.",
                "Natural.100m.", "Artificial_subasin", "Agriculture_subasin", "Pasture_subasin", "Natural_subasin")
 env_data <- env_data[ , !(names(env_data) %in% to_remove)]
-# env.data2 <- env.data[, c(12, 23, 24, 25, 27, 28, 32, 37)]
-# row.names(env.data2) <- row.names(env_data)
+env_data_nt <- env_data[ , !(names(env_data) %in% to_remove)]
+
+# Transformações
+env_data$Altitude <- sqrt(env_data$Altitude)
+env_data$shadow <- car::logit(env_data$shadow/100)
+env_data$DIN <- sqrt(env_data$DIN)
+env_data$P.PO4 <- sqrt(env_data$P.PO4)
+env_data$cond <- log(env_data$cond+0.0001)
+env_data$mean.Depth <- log(env_data$mean.Depth+0.0001)
+env_data$mean.Velocity <- sqrt(env_data$mean.Velocity)
+env_data$Discharge <- log(env_data$Discharge+0.0001)
+
+river_basin$alt <- cut(env_data_nt$Altitude,
+              breaks=c(0, 200, 400, 600, 800, 1000),
+              labels=c('<200', '200-400', '400-600', '600-800', ">800"))
+
+river_basin$river_basin <- as.factor(river_basin$river_basin)
+river_basin$alt <- as.factor(river_basin$alt)
+
+# par(mfrow=c(1, 1))
+# hist(env_data$LUI_100m)
+# hist(sqrt(env_data$LUI_100m))
+# wilcox.test(sqrt(env_data$LUI_100m))
 
 # Apenas para hyphomycetes
 # env_data <- env_data[-40,]
@@ -238,6 +275,7 @@ env_data <- env_data[ , !(names(env_data) %in% to_remove)]
 # indices <- Reduce(function(df1, df2) cbind(df1, df2), shannon, init = matriz_final)
 # indices <- indices[,-1:-31]
 
+diversidade <- lapply(bact_fung_taxa, function(x) specnumber(t(x)))
 
 shannon_index <- lapply(bact_fung_taxa, function(x) diversity(t(x), index = "shannon", base = exp(1)))
 
@@ -247,58 +285,157 @@ margalef_index <- lapply(bact_fung_taxa, function(x) apply(x, 2, margalef))
 
 simpson_index <- lapply(bact_fung_taxa, function(x) diversity(t(x), index = "simpson", MARGIN = 1, base = exp(1)))
 
+bray_index <- lapply(bact_fung_taxa, function(x) {pco <- dudi.pco(vegdist(t(x), method = "bray"), scannf = F, nf = 10)
+x <- return(pco$li$A1)
+row.names(x) <- col.names(bact_fung_taxa)})
+
+
 # Para hifomicetes, mudar times=1
-PCA_env <- prcomp(env_data, scale = TRUE)
-PCA_dataframe <- map2(shannon_index, PCA_env, function(ind, env) {
-  data.frame(bioindex = ind, environmental_data = env$x[,1])
-})
+#env_data <- scale(env_data)
+#env_data_nt <- scale(env_data_nt)
+#PCA_env <- prcomp(env_data, scale = TRUE)
+PCA_env <- dudi.pca(env_data, center = TRUE, scale = TRUE, nf=5, scannf = FALSE)
 
+
+# PCA_env <- rep(list(dudi.pca(env_data, center = TRUE, scale = TRUE, nf=5, scannf = FALSE)), times = 12)
+biplot(PCA_env)
+s.arrow(PCA_env$c1, lab=names(PCA_env$tab))
+var_exp <- (PCA_env$eig*100)/sum(PCA_env$eig)
+
+env_data <- cbind(env_data, PCA_env$li[,1])
+env_data_nt <- cbind(env_data_nt, PCA_env$li[,1])
+
+# PCA_dataframe <- map2(diversidade, PCA_env, function(ind, env) {
+#   data.frame(bioindex = ind, environmental_data = env$li[,1])
+# })
+
+indices <- read_excel("bioindices.xlsx")
+indices <- as.data.frame(indices)
+row.names(indices) <- indices$local
+indices <- indices[, -1]
+
+indices <- as.data.frame(indices)
+env_data_nt <- as.data.frame(env_data_nt)
+env_data <- as.data.frame(env_data)
+
+indices2 <- indices[,c("Bacteria_species_div","Bacteria_species_shannon",
+           "Fungi_species_div", "Fungi_species_shannon")]
+
+# cor(indices2, env_data_nt, method="pearson")
+# cor(indices2, env_data_nt, method="spearman")
+#
+# wb <- createWorkbook()
+# sheet <- createSheet(wb, "pearson")
+# addDataFrame(cor(indices2, env_data_nt, method="pearson"), sheet=sheet,
+#              startColumn=1, row.names=T)
+#
+# sheet <- createSheet(wb, "spearman")
+#
+# addDataFrame(cor(indices2, env_data_nt, method="spearman"), sheet=sheet,
+#              startColumn=1, row.names=T)
+#
+# saveWorkbook(wb, "correlacoes.xlsx")
+
+modelos_nt <- as.data.frame(cbind(indices2, env_data_nt))
+
+modelos_nt<-cbind(modelos_nt, vel = modelos_nt$mean.Velocity)
+
+jpeg("bact_shannon_velocidade.jpg")
+par(mfrow=c(1,1))
+plot(Bacteria_species_shannon~vel, data = modelos_nt, xlab = "Mean velocity (m2/s)")
+r2 <- bquote(paste(bold(R^2 == .(11.6))))
+mtext("p<0.01", line=-1.5, adj = 1, cex = 1.2, font = 2)
+mtext(r2, line=-2.5, adj = 1, cex = 1.2, font = 2)
+mod <- lm(Bacteria_species_shannon~vel, data = modelos_nt)
+abline(mod)
+dev.off()
+summary(mod)
+
+
+#jpeg("bact_riqueza_QBR.jpg")
+par(mfrow=c(1,1))
+plot(Bacteria_species_div~qbr, data = modelos_nt, xlab = "QBR", ylab = "Bacteria species richness")
+# r2 <- bquote(paste(bold(R^2 == .(11.6))))
+# mtext("p<0.01", line=-1.5, adj = 1, cex = 1.2, font = 2)
+# mtext(r2, line=-2.5, adj = 1, cex = 1.2, font = 2)
+# mod2 <- glm(Bacteria_species_div~I(1/qbr), data = modelos_nt, family = gaussian("inverse"))
+# mod2 <- nls(Bacteria_species_div~Vm*qbr/(K+qbr), data=modelos_nt,start=list(K=1, Vm=95), trace = TRUE)
+# mod2 <- nls(Bacteria_species_div~SSlogis(log(qbr+0.001)), data=modelos_nt)
+mod2 <- loess(Bacteria_species_div~qbr, data=modelos_nt)
+smooth1 <- predict(mod2, data.frame(qbr = seq(0.1,95)))
+line(smooth1)
+summary(mod2)
+
+par(mfrow=c(1,1))
+
+jpeg("fung_riqueza_lui100.jpg")
+plot(Fungi_species_div~LUI_100m, data = modelos_nt,  ylab = "Fungi species richness")
+# r2 <- bquote(paste(bold(R^2 == .(9.4))))
+# mtext("p<0.05", line=-1.5, adj = 1, cex = 1.2, font = 2)
+# mtext(r2, line=-2.5, adj = 1, cex = 1.2, font = 2)
+mod <- lm(Fungi_species_div~LUI_500m, data = modelos_nt)
+abline(mod)
+dev.off()
+summary(mod)
+
+jpeg("bact_riqueza_LUI500.jpg")
+par(mfrow=c(2,2))
+plot(mod)
+dev.off()
 # jpeg("pca_env.jpg")
-fviz_eig(PCA_env)
-fviz_pca_ind(PCA_env,
-             col.ind = "cos2", # Color by the quality of representation
-             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
-             repel = TRUE     # Avoid text overlapping
-             )
-
-fviz_pca_var(PCA_env,
-             col.var = "contrib", # Color by contributions to the PC
-             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
-             repel = TRUE     # Avoid text overlapping
-             )
-
-fviz_pca_biplot(PCA_env, repel = TRUE,
-                col.var = "#2E9FDF", # Variables color
-                col.ind = "#696969"  # Individuals color
-                )
+# fviz_eig(PCA_env)
+# fviz_pca_ind(PCA_env,
+#              col.ind = "cos2", # Color by the quality of representation
+#              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+#              repel = TRUE     # Avoid text overlapping
+#              )
+#
+# fviz_pca_var(PCA_env,
+#              col.var = "contrib", # Color by contributions to the PC
+#              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+#              repel = TRUE     # Avoid text overlapping
+#              )
+#
+# fviz_pca_biplot(PCA_env, repel = TRUE,
+#                 col.var = "#2E9FDF", # Variables color
+#                 col.ind = "#696969"  # Individuals color
+#                 )
 
 # dev.off()
 
 
-all_graphs <- lapply(seq_along(PCA_dataframe), function(i) {
-  all_dataframe <- PCA_dataframe[[i]]
-  ggplot(all_dataframe, aes(x=environmental_data, y=bioindex)) +
-    geom_point() +
-    # geom_text(aes(label = rownames(all_dataframe))) +
-    geom_text(aes(label = rownames(all_dataframe)), size = 2, nudge_x = 1, nudge_y = 0.03) +
-    ggtitle(names(PCA_dataframe)[i]) +  # add the dataframe name as the plot title
-    labs(x="Environmental variables", y="Shannon index") +
-    theme(legend.position = "none")
-})
+# all_graphs <- lapply(seq_along(PCA_dataframe), function(i) {
+#   all_dataframe <- PCA_dataframe[[i]]
+#   ggplot(all_dataframe, aes(x=environmental_data, y=bioindex)) +
+#     geom_point() +
+#     # geom_text(aes(label = rownames(all_dataframe))) +
+#     #geom_text(aes(label = rownames(all_dataframe)), size = 2, nudge_x = 1, nudge_y = 0.03) +
+#     ggtitle(names(PCA_dataframe)[i]) +  # add the dataframe name as the plot title
+#     labs(x="Environmental variables", y="Diversity index") +
+#     theme(legend.position = "none")
+# })
 
-pdf("PCA_shannon.pdf")
-for (i in 1:length(all_graphs)) {
-  print(all_graphs[[i]])
+# pdf("PCA_div.pdf")
+# for (i in 1:length(all_graphs)) {
+#   print(all_graphs[[i]])
+# }
+# dev.off()
+
+pdf("modelos_lineares.pdf")
+for (i in 1:ncol(modelos_nt)) {
+  for(j in 1:ncol(indices2)) {
+    dados = as.data.frame(cbind(env_data_nt[i], indices2[j]))
+    plot(Fungi_species_div~LUI_100m, data = modelos_nt,  ylab = "Fungi species richness")
+    # r2 <- bquote(paste(bold(R^2 == .(9.4))))
+    # mtext("p<0.05", line=-1.5, adj = 1, cex = 1.2, font = 2)
+    # mtext(r2, line=-2.5, adj = 1, cex = 1.2, font = 2)
+    mod <- lm(Fungi_species_div~LUI_500m, data = modelos_nt)
+    abline(mod)
+
+  }
 }
+
 dev.off()
-
-
-#summary(PCA_teste3)
-
-
-
-
-
 
 
 # div <- as.data.frame(scale(div))
@@ -362,4 +499,38 @@ dev.off()
 # ggrepel::geom_text_repel(data = sig.spp.scrs, aes(x=NMDS1, y=NMDS2, label = Species), cex = 3, direction = "both", segment.size = 0.25)
 #
 # plot(div$shannon_bact~env.data$mean.Velocity)
+
+plot(indices$Bacteria_phylum_pielou~env_data_nt$V20)
+mod<-lm(indices$Bacteria_phylum_pielou~env_data_nt$V20)
+abline(mod)
+summary(mod)
+
+plot(data$V1~data$V2,data = data )
+mod <- lm(data$V1~data$V2,data = data )
+abline(mod)
+summary(mod)
+par(mfrow=c(2,2))
+plot(mod)
+
+plot(data2$V1~data2$V2, data = data2)
+mod <- lm(data2$V1~data2$V2, data = data2)
+abline(mod)
+summary(mod)
+
+data <- as.data.frame(cbind(indices$Bacteria_phylum_pielou, env_data_nt$`PCA_env$li[, 1]`))
+data2 <- data[!row.names(data) %in% "VEZ1",]
+row.names(data) <- row.names(indices)
+
+jpeg("Pielou_bacteria_phylum.jpg")
+
+ggplot(data, aes(x=V2, y=V1)) +
+   geom_point() +
+      geom_text(aes(label = rownames(data)), nudge_y = 0.005) +
+   geom_smooth(method='lm') +
+     #geom_text(aes(label = rownames(all_dataframe)), size = 2, nudge_x = 1, nudge_y = 0.03) +
+     ggtitle(names("Bacteria Phylum")) +  # add the dataframe name as the plot title
+     labs(x="Environmental variables", y="Pielou index") +
+     theme(legend.position = "none")
+
+dev.off()
 
