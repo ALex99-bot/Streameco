@@ -1,6 +1,6 @@
 # Set the directory and file name
-# directory <- "/home/pedro/PycharmProjects/Streameco"
-directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
+directory <- "/home/pedro/PycharmProjects/Streameco"
+# directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
 setwd(directory)
 
 file <- "total_reads.xlsx"
@@ -25,8 +25,10 @@ library(ggrepel)
 library(factoextra)
 library(xlsx)
 library(abdiv)
+library(plyr)
 library(dplyr)
 library(ggpmisc)
+library(aomisc)
 
 read_excel_sheets <- function(path, file){
   my_sheet_names <- excel_sheets(path)
@@ -256,12 +258,12 @@ env_data$mean.Depth <- log(env_data$mean.Depth+0.0001)
 env_data$mean.Velocity <- sqrt(env_data$mean.Velocity)
 env_data$Discharge <- log(env_data$Discharge+0.0001)
 
-river_basin$alt <- cut(env_data_nt$Altitude,
-              breaks=c(0, 200, 400, 600, 800, 1000),
-              labels=c('<200', '200-400', '400-600', '600-800', ">800"))
-
-river_basin$river_basin <- as.factor(river_basin$river_basin)
-river_basin$alt <- as.factor(river_basin$alt)
+# river_basin$alt <- cut(env_data_nt$Altitude,
+#               breaks=c(0, 200, 400, 600, 800, 1000),
+#               labels=c('<200', '200-400', '400-600', '600-800', ">800"))
+#
+# river_basin$river_basin <- as.factor(river_basin$river_basin)
+# river_basin$alt <- as.factor(river_basin$alt)
 
 # par(mfrow=c(1, 1))
 # hist(env_data$LUI_100m)
@@ -285,9 +287,10 @@ margalef_index <- lapply(bact_fung_taxa, function(x) apply(x, 2, margalef))
 
 simpson_index <- lapply(bact_fung_taxa, function(x) diversity(t(x), index = "simpson", MARGIN = 1, base = exp(1)))
 
-bray_index <- lapply(bact_fung_taxa, function(x) {pco <- dudi.pco(vegdist(t(x), method = "bray"), scannf = F, nf = 10)
-x <- return(pco$li$A1)
-row.names(x) <- col.names(bact_fung_taxa)})
+# Está mal, é preciso corrigir
+# bray_index <- lapply(bact_fung_taxa, function(x) {pco <- dudi.pco(vegdist(t(x), method = "bray"), scannf = F, nf = 10)
+# x <- return(pco$li$A1)
+# row.names(x) <- col.names(bact_fung_taxa)})
 
 
 # Para hifomicetes, mudar times=1
@@ -302,8 +305,8 @@ biplot(PCA_env)
 s.arrow(PCA_env$c1, lab=names(PCA_env$tab))
 var_exp <- (PCA_env$eig*100)/sum(PCA_env$eig)
 
-env_data <- cbind(env_data, PCA_env$li[,1])
-env_data_nt <- cbind(env_data_nt, PCA_env$li[,1])
+env_data <- cbind(env_data, PC1 = PCA_env$li[,1])
+env_data_nt <- cbind(env_data_nt, PC1 = PCA_env$li[,1])
 
 # PCA_dataframe <- map2(diversidade, PCA_env, function(ind, env) {
 #   data.frame(bioindex = ind, environmental_data = env$li[,1])
@@ -340,17 +343,60 @@ modelos_nt <- as.data.frame(cbind(indices2, env_data_nt))
 
 modelos_nt<-cbind(modelos_nt, vel = modelos_nt$mean.Velocity)
 
-jpeg("bact_shannon_velocidade.jpg")
+# jpeg("bact_shannon_velocidade.jpg")
 par(mfrow=c(1,1))
-plot(Bacteria_species_shannon~vel, data = modelos_nt, xlab = "Mean velocity (m2/s)")
+plot(Fungi_species_div ~ Altitude, data = modelos_nt)
+
 r2 <- bquote(paste(bold(R^2 == .(11.6))))
 mtext("p<0.01", line=-1.5, adj = 1, cex = 1.2, font = 2)
 mtext(r2, line=-2.5, adj = 1, cex = 1.2, font = 2)
-mod <- lm(Bacteria_species_shannon~vel, data = modelos_nt)
+mod <- lm(Fungi_species_div ~ LUI_500m, data = modelos_nt)
 abline(mod)
-dev.off()
+# dev.off()
 summary(mod)
 
+model <- drm(Fungi_species_div ~ cond, fct = DRC.expoDecay(),
+             data = modelos_nt)
+
+summary(model)
+
+plot(model, log = "", main = "Exponential decay")
+
+model <- drm(Fungi_species_div ~ Altitude, fct = G.3(), data = modelos_nt)
+model.2 <- drm(Fungi_species_div ~ Altitude, fct = G.4(), data = modelos_nt)
+model.3 <- drm(Fungi_species_div/max(Fungi_species_div) ~ Altitude, fct = G.2(), data = modelos_nt)
+summary(model.3)
+plot(model.2, log="", main = "Gompertz function")
+
+model_loglogist <- drm(Fungi_species_div ~ Altitude, fct = LL.4(), data = modelos_nt)
+summary(model_loglogist)
+plot(model_loglogist, main = "Log-logistic function")
+
+
+model_loglogit_bact <- drm(Bacteria_species_div ~ qbr, fct = LL.4(), data = modelos_nt)
+summary(model_loglogit_bact)
+plot(model_loglogit_bact, main = "Log-logistic function bacteria", xlim = c(0, 300))
+
+
+# drm fit
+model <- drm(Fungi_species_div ~ qbr, fct = DRC.expoGrowth(),
+             data = modelos_nt)
+summary(model)
+plot(model, log="", main = "Logistic function")
+
+# drm fit
+model <- drm(Fungi_species_div ~ qbr, fct = L.3(), data = modelos_nt)
+model.2 <- drm(Fungi_species_div ~ qbr, fct = L.4(), data = modelos_nt)
+model.3 <- drm(Fungi_species_div/max(Fungi_species_div) ~ qbr, fct = L.2(), data = modelos_nt)
+summary(model.3)
+plot(model.2, log="", main = "Logistic function")
+
+fit <- lm(Fungi_species_div ~ poly(qbr, 2), data = modelos_nt)
+summary(fit)
+ggplot(modelos_nt, aes(qbr, Fungi_species_div)) +
+  geom_point() +
+  geom_line(aes(qbr, predict(fit))) +
+  ggtitle("Quadratic Regression")
 
 #jpeg("bact_riqueza_QBR.jpg")
 par(mfrow=c(1,1))
@@ -368,14 +414,14 @@ summary(mod2)
 
 par(mfrow=c(1,1))
 
-jpeg("fung_riqueza_lui100.jpg")
+# jpeg("fung_riqueza_lui100.jpg")
 plot(Fungi_species_div~LUI_100m, data = modelos_nt,  ylab = "Fungi species richness")
 # r2 <- bquote(paste(bold(R^2 == .(9.4))))
 # mtext("p<0.05", line=-1.5, adj = 1, cex = 1.2, font = 2)
 # mtext(r2, line=-2.5, adj = 1, cex = 1.2, font = 2)
 mod <- lm(Fungi_species_div~LUI_500m, data = modelos_nt)
 abline(mod)
-dev.off()
+# dev.off()
 summary(mod)
 
 jpeg("bact_riqueza_LUI500.jpg")
