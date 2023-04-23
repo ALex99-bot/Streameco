@@ -437,6 +437,7 @@ for (i in 1:ncol(modelos_nt)) {
 
 dev.off()
 
+plot2 <- plot(Fungi_species_div~LUI_100m, data = modelos_nt,  ylab = "Fungi species richness")
 
 # div <- as.data.frame(scale(div))
 # env.data <- env.data[, c(1, 2, 4, 5, 6, 15, 17, 22, 26, 28, 29, 30, 31)]
