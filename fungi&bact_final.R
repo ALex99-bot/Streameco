@@ -1,6 +1,7 @@
 # Set the directory and file name
 # directory <- "/home/pedro/PycharmProjects/Streameco"
-directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
+#directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
+directory<-"C:/Users/asus/Desktop/Streameco"
 setwd(directory)
 
 file <- "total_reads.xlsx"
