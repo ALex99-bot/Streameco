@@ -1,6 +1,6 @@
 # Set the directory and file name
-directory <- "/home/pedro/PycharmProjects/Streameco"
-# directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
+# directory <- "/home/pedro/PycharmProjects/Streameco"
+directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
 setwd(directory)
 
 file <- "total_reads.xlsx"
@@ -29,6 +29,7 @@ library(plyr)
 library(dplyr)
 library(ggpmisc)
 library(aomisc)
+library(nlstools)
 
 read_excel_sheets <- function(path, file){
   my_sheet_names <- excel_sheets(path)
@@ -350,17 +351,19 @@ plot(Fungi_species_div ~ Altitude, data = modelos_nt)
 r2 <- bquote(paste(bold(R^2 == .(11.6))))
 mtext("p<0.01", line=-1.5, adj = 1, cex = 1.2, font = 2)
 mtext(r2, line=-2.5, adj = 1, cex = 1.2, font = 2)
-mod <- lm(Fungi_species_div ~ LUI_500m, data = modelos_nt)
+mod <- lm(Fungi_species_div ~ Altitude, data = modelos_nt)
 abline(mod)
 # dev.off()
 summary(mod)
 
-model <- drm(Fungi_species_div ~ cond, fct = DRC.expoDecay(),
+model <- nls(Fungi_species_div ~ NLS.expoDecay(cond, a, k),
              data = modelos_nt)
 
 summary(model)
 
 plot(model, log = "", main = "Exponential decay")
+residuos_expodecay <- nlsResiduals(model)
+
 
 model <- drm(Fungi_species_div ~ Altitude, fct = G.3(), data = modelos_nt)
 model.2 <- drm(Fungi_species_div ~ Altitude, fct = G.4(), data = modelos_nt)
