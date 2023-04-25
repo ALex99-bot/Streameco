@@ -1,7 +1,7 @@
 # Set the directory and file name
 # directory <- "/home/pedro/PycharmProjects/Streameco"
-#directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
-directory<-"C:/Users/asus/Desktop/Streameco"
+directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
+# directory <-"C:/Users/asus/Desktop/Streameco"
 setwd(directory)
 
 file <- "total_reads.xlsx"
@@ -31,6 +31,8 @@ library(dplyr)
 library(ggpmisc)
 library(aomisc)
 library(nlstools)
+library(nlshelper)
+
 
 read_excel_sheets <- function(path, file){
   my_sheet_names <- excel_sheets(path)
@@ -348,7 +350,6 @@ modelos_nt<-cbind(modelos_nt, vel = modelos_nt$mean.Velocity)
 # jpeg("bact_shannon_velocidade.jpg")
 par(mfrow=c(1,1))
 plot(Fungi_species_div ~ Altitude, data = modelos_nt)
-
 r2 <- bquote(paste(bold(R^2 == .(11.6))))
 mtext("p<0.01", line=-1.5, adj = 1, cex = 1.2, font = 2)
 mtext(r2, line=-2.5, adj = 1, cex = 1.2, font = 2)
@@ -357,20 +358,49 @@ abline(mod)
 # dev.off()
 summary(mod)
 
-model <- nls(Fungi_species_div ~ NLS.expoDecay(cond, a, k),
+# modelos_nt2 <- modelos_nt[!(row.names(modelos_nt) %in% "ROD1"),]
+
+# nls
+model_expodecay_nls <- nls(Fungi_species_div ~ NLS.expoDecay(cond, a, k),
              data = modelos_nt)
 
+#jpeg("plot.jpg")
+plot_nls(model_expodecay_nls)
+
+#dev.off()
+
+#plot(Fungi_species_div ~ cond, data=modelos_nt)
+#text(Fungi_species_div ~ cond, labels=rownames(modelos_nt), data=modelos_nt)
+
+summary(model_expodecay_nls)
+R2nls(model_expodecay_nls)$PseudoR2
+
+residuos_expodecay <- nlsResiduals(model_expodecay_nls)
+par(mfrow = c(2, 2))
+jpeg("residuos_expodecay.jpg")
+plot(residuos_expodecay, which = 0)
+#text(df$x, df$y, labels=df$z)
+dev.off()
+
+#drm
+model <- drm(Fungi_species_div ~ cond, fct = DRC.expoDecay(),
+             data = modelos_nt)
 summary(model)
 
 plot(model, log = "", main = "Exponential decay")
-residuos_expodecay <- nlsResiduals(model)
 
+par(mfrow=c(1,1))
+plot(Bacteria_species_shannon ~ Altitude, data = modelos_nt)
 
-model <- drm(Fungi_species_div ~ Altitude, fct = G.3(), data = modelos_nt)
-model.2 <- drm(Fungi_species_div ~ Altitude, fct = G.4(), data = modelos_nt)
-model.3 <- drm(Fungi_species_div/max(Fungi_species_div) ~ Altitude, fct = G.2(), data = modelos_nt)
-summary(model.3)
-plot(model.2, log="", main = "Gompertz function")
+# nls fit altitude
+model <- nls(Fungi_species_div ~ NLS.expoDecay(Altitude, a, k),
+             data = modelos_nt)
+plot_nls(model)
+# drm fit
+model <- drm(Fungi_species_div ~ Altitude, fct = DRC.expoDecay(),
+             data = modelos_nt)
+summary(model)
+plot(model, log = "", main = "Exponential decay")
 
 model_loglogist <- drm(Fungi_species_div ~ Altitude, fct = LL.4(), data = modelos_nt)
 summary(model_loglogist)
@@ -381,6 +411,16 @@ model_loglogit_bact <- drm(Bacteria_species_div ~ qbr, fct = LL.4(), data = mode
 summary(model_loglogit_bact)
 plot(model_loglogit_bact, main = "Log-logistic function bacteria", xlim = c(0, 300))
 
+# nls fit
+model <- nls(Fungi_species_div ~ NLS.expoGrowth(qbr, a, k),
+             data = modelos_nt)
+summary(model)
+plot_nls(model)
+R2nls(model)$PseudoR2
+
+residuos_expodecay <- nlsResiduals(model)
+par(mfrow = c(2, 2))
+plot(residuos_expodecay, which = 0)
 
 # drm fit
 model <- drm(Fungi_species_div ~ qbr, fct = DRC.expoGrowth(),
