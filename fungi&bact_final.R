@@ -1,6 +1,6 @@
 # Set the directory and file name
-# directory <- "/home/pedro/PycharmProjects/Streameco"
-directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
+directory <- "/home/pedro/PycharmProjects/Streameco"
+# directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
 # directory <-"C:/Users/asus/Desktop/Streameco"
 setwd(directory)
 
@@ -349,7 +349,7 @@ modelos_nt<-cbind(modelos_nt, vel = modelos_nt$mean.Velocity)
 
 # jpeg("bact_shannon_velocidade.jpg")
 par(mfrow=c(1,1))
-plot(Fungi_species_div ~ Altitude, data = modelos_nt)
+plot(Fungi_species_div ~ cond, data = modelos_nt)
 r2 <- bquote(paste(bold(R^2 == .(11.6))))
 mtext("p<0.01", line=-1.5, adj = 1, cex = 1.2, font = 2)
 mtext(r2, line=-2.5, adj = 1, cex = 1.2, font = 2)
@@ -360,65 +360,125 @@ summary(mod)
 
 # modelos_nt2 <- modelos_nt[!(row.names(modelos_nt) %in% "ROD1"),]
 
-# nls
-model_expodecay_nls <- nls(Fungi_species_div ~ NLS.expoDecay(cond, a, k),
+
+# Fungi_species_div ~ PC1
+Fungi_div_PC1 <- nls(Fungi_species_div ~ NLS.expoDecay(PC1, a, k), data = modelos_nt)
+
+# Fungi_species_div ~ alt
+fungi_div_alt <- nls(Fungi_species_div ~ NLS.expoGrowth(Altitude, a, k),
              data = modelos_nt)
 
-#jpeg("plot.jpg")
-plot_nls(model_expodecay_nls)
+# Fungi_species_div ~ LUI_subasin
+fungi_div_subasin <- nls(Fungi_species_div ~ NLS.expoGrowth(LUI_subasin, a, k), data = modelos_nt)
 
-#dev.off()
+# Fungi_species_div ~ LUI_100m
+fungi_div_100m <- nls(Fungi_species_div ~ NLS.expoGrowth(LUI_100m, a, k), data = modelos_nt)
 
-#plot(Fungi_species_div ~ cond, data=modelos_nt)
-#text(Fungi_species_div ~ cond, labels=rownames(modelos_nt), data=modelos_nt)
+# Fungi_species_div ~ LUI_500m
+fungi_div_500m <- nls(Fungi_species_div ~ NLS.expoGrowth(LUI_500m, a, k), data = modelos_nt)
 
-summary(model_expodecay_nls)
-R2nls(model_expodecay_nls)$PseudoR2
+# Fungi_species_div ~ DOmin
+fungi_div_DOmin <- nls(Fungi_species_div ~ NLS.expoGrowth(DOmin, a, k), data = modelos_nt)
 
-residuos_expodecay <- nlsResiduals(model_expodecay_nls)
-par(mfrow = c(2, 2))
-jpeg("residuos_expodecay.jpg")
-plot(residuos_expodecay, which = 0)
-#text(df$x, df$y, labels=df$z)
+# Fungi_species_div ~ cond
+fung_div_cond <- nls(Fungi_species_div ~ NLS.expoDecay(cond, a, k), data = modelos_nt)
+
+pdf("modelos_nao_lineares.pdf")
+  # Fungi_species_div ~ PC1
+  par(mfrow = c(1, 1))
+  plot_nls(Fungi_div_PC1)
+  r2 <- bquote(paste("R"^2 == .(format(R2nls(Fungi_div_PC1)$PseudoR2, digits = 4))))
+  pval <- bquote(paste(bold("p-value: ", .(format(summary(Fungi_div_PC1)$coefficients[2,4], digits = 5)))))
+  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+
+  par(mfrow = c(2, 2))
+  plot(nlsResiduals(Fungi_div_PC1), which = 0)
+
+  # Fungi_species_div ~ alt
+  par(mfrow = c(1, 1))
+  plot_nls(fungi_div_alt)
+  r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_alt)$PseudoR2, digits = 4))))
+  pval <- bquote(paste(bold("p-value: ", .(format(summary(fungi_div_alt)$coefficients[2,4], digits = 5)))))
+  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+
+  par(mfrow = c(2, 2))
+  plot(nlsResiduals(fungi_div_alt), which = 0)
+
+  # Fungi_species_div ~ LUI_subbasin
+  par(mfrow = c(1, 1))
+  plot_nls(fungi_div_subasin)
+  r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_subasin)$PseudoR2, digits = 4))))
+  pval <- bquote(paste(bold("p-value: ", .(format(summary(fungi_div_subasin)$coefficients[2,4], digits = 5)))))
+  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+
+  par(mfrow = c(2, 2))
+  plot(nlsResiduals(fungi_div_subasin), which = 0)
+
+  # Fungi_species_div ~ LUI_100m
+  par(mfrow = c(1, 1))
+  plot_nls(fungi_div_100m)
+  r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_100m)$PseudoR2, digits = 4))))
+  pval <- bquote(paste(bold("p-value: ", .(format(summary(fungi_div_100m)$coefficients[2,4], digits = 5)))))
+  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+
+  par(mfrow = c(2, 2))
+  plot(nlsResiduals(fungi_div_100m), which = 0)
+
+  # Fungi_species_div ~ LUI_500m
+  par(mfrow = c(1, 1))
+  plot_nls(fungi_div_500m)
+  r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_500m)$PseudoR2, digits = 4))))
+  pval <- bquote(paste(bold("p-value: ", .(format(summary(fungi_div_500m)$coefficients[2,4], digits = 5)))))
+  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+
+  par(mfrow = c(2, 2))
+  plot(nlsResiduals(fungi_div_500m), which = 0)
+
+  # Fungi_species_div ~ DOmin
+  par(mfrow = c(1, 1))
+  plot_nls(fungi_div_DOmin)
+  r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_DOmin)$PseudoR2, digits = 4))))
+  pval <- bquote(paste(bold("p-value: ", .(format(summary(fungi_div_DOmin)$coefficients[2,4], digits = 5)))))
+  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+
+  par(mfrow = c(2, 2))
+  plot(nlsResiduals(fungi_div_DOmin), which = 0)
+
+  # Fungi_species_div ~ cond
+  par(mfrow = c(1, 1))
+  plot_nls(fung_div_cond)
+  # Obtain R-squared value
+  r2 <- bquote(paste("R"^2 == .(format(R2nls(fung_div_cond)$PseudoR2, digits = 4))))
+  pval <- bquote(paste(bold("p-value: ", .(format(summary(fung_div_cond)$coefficients[2,4], digits = 5)))))
+  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+
+  par(mfrow = c(2, 2))
+  plot(nlsResiduals(fung_div_cond), which = 0)
+
 dev.off()
 
-#drm
-model <- drm(Fungi_species_div ~ cond, fct = DRC.expoDecay(),
-             data = modelos_nt)
-summary(model)
-
-plot(model, log = "", main = "Exponential decay")
-
-par(mfrow=c(1,1))
-plot(Bacteria_species_shannon ~ Altitude, data = modelos_nt)
-
+cenas <- summary(fung_div_cond)
+cenas$coefficients
 # nls fit altitude
 model <- nls(Fungi_species_div ~ NLS.expoDecay(Altitude, a, k),
              data = modelos_nt)
-plot_nls(model)
-# drm fit
-model <- drm(Fungi_species_div ~ Altitude, fct = DRC.expoDecay(),
-             data = modelos_nt)
-summary(model)
-plot(model, log = "", main = "Exponential decay")
-
-model_loglogist <- drm(Fungi_species_div ~ Altitude, fct = LL.4(), data = modelos_nt)
-summary(model_loglogist)
-plot(model_loglogist, main = "Log-logistic function")
 
 
-model_loglogit_bact <- drm(Bacteria_species_div ~ qbr, fct = LL.4(), data = modelos_nt)
-summary(model_loglogit_bact)
-plot(model_loglogit_bact, main = "Log-logistic function bacteria", xlim = c(0, 300))
 
 # nls fit
-model <- nls(Fungi_species_div ~ NLS.expoGrowth(qbr, a, k),
+Fung_div_qbr <- nls(Fungi_species_div ~ NLS.expoGrowth(qbr, a, k),
              data = modelos_nt)
-summary(model)
-plot_nls(model)
-R2nls(model)$PseudoR2
-
-residuos_expodecay <- nlsResiduals(model)
+summary(Fung_div_qbr)
+plot_nls(Fung_div_qbr)
+R2nls(Fung_div_qbr)$PseudoR2
+residuos_expodecay <- nlsResiduals(Fung_div_qbr)
 par(mfrow = c(2, 2))
 plot(residuos_expodecay, which = 0)
 
@@ -458,20 +518,24 @@ summary(mod2)
 
 par(mfrow=c(1,1))
 
-# jpeg("fung_riqueza_lui100.jpg")
-plot(Fungi_species_div~LUI_100m, data = modelos_nt,  ylab = "Fungi species richness")
-# r2 <- bquote(paste(bold(R^2 == .(9.4))))
-# mtext("p<0.05", line=-1.5, adj = 1, cex = 1.2, font = 2)
-# mtext(r2, line=-2.5, adj = 1, cex = 1.2, font = 2)
-mod <- lm(Fungi_species_div~LUI_500m, data = modelos_nt)
-abline(mod)
-# dev.off()
-summary(mod)
-
-jpeg("bact_riqueza_LUI500.jpg")
-par(mfrow=c(2,2))
-plot(mod)
+pdf("modelos_lineares.pdf")
+for (i in colnames(indices2)) {
+  for(j in colnames(env_data_nt)) {
+    dados <- as.data.frame(cbind(indices2[[i]], env_data_nt[[j]]))
+    par(mfrow=c(1,1))
+    plot(indices2[[i]] ~ env_data_nt[[j]], data = dados, xlab = colnames(env_data_nt[j]), ylab = colnames(indices2[i]))
+    mod <- lm(indices2[[i]] ~ env_data_nt[[j]], data = dados)
+    r2 <- bquote(paste(bold(R^2 == .(summary(mod)$r.squared))))
+    pval <- bquote(paste(bold("p-value: ", .(summary(mod)$coefficients[2,4]))))
+    mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+    mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+    abline(mod)
+    par(mfrow=c(2,2))
+    plot(mod)
+  }
+}
 dev.off()
+
 # jpeg("pca_env.jpg")
 # fviz_eig(PCA_env)
 # fviz_pca_ind(PCA_env,
@@ -511,23 +575,6 @@ dev.off()
 # }
 # dev.off()
 
-pdf("modelos_lineares.pdf")
-for (i in 1:ncol(modelos_nt)) {
-  for(j in 1:ncol(indices2)) {
-    dados = as.data.frame(cbind(env_data_nt[i], indices2[j]))
-    plot(Fungi_species_div~LUI_100m, data = modelos_nt,  ylab = "Fungi species richness")
-    # r2 <- bquote(paste(bold(R^2 == .(9.4))))
-    # mtext("p<0.05", line=-1.5, adj = 1, cex = 1.2, font = 2)
-    # mtext(r2, line=-2.5, adj = 1, cex = 1.2, font = 2)
-    mod <- lm(Fungi_species_div~LUI_500m, data = modelos_nt)
-    abline(mod)
-
-  }
-}
-
-dev.off()
-
-plot2 <- plot(Fungi_species_div~LUI_100m, data = modelos_nt,  ylab = "Fungi species richness")
 
 # div <- as.data.frame(scale(div))
 # env.data <- env.data[, c(1, 2, 4, 5, 6, 15, 17, 22, 26, 28, 29, 30, 31)]
@@ -591,22 +638,14 @@ plot2 <- plot(Fungi_species_div~LUI_100m, data = modelos_nt,  ylab = "Fungi spec
 #
 # plot(div$shannon_bact~env.data$mean.Velocity)
 
-plot(indices$Bacteria_phylum_pielou~env_data_nt$V20)
-mod<-lm(indices$Bacteria_phylum_pielou~env_data_nt$V20)
-abline(mod)
-summary(mod)
+modelos_nt3 <- cbind(modelos_nt, "Bacteria_phylum_pielou" = indices$Bacteria_phylum_pielou)
 
-plot(data$V1~data$V2,data = data )
-mod <- lm(data$V1~data$V2,data = data )
+plot(Bacteria_phylum_pielou ~ PC1, data = modelos_nt3)
+mod <- lm(Bacteria_phylum_pielou ~ PC1, data = modelos_nt3)
 abline(mod)
 summary(mod)
 par(mfrow=c(2,2))
 plot(mod)
-
-plot(data2$V1~data2$V2, data = data2)
-mod <- lm(data2$V1~data2$V2, data = data2)
-abline(mod)
-summary(mod)
 
 data <- as.data.frame(cbind(indices$Bacteria_phylum_pielou, env_data_nt$`PCA_env$li[, 1]`))
 data2 <- data[!row.names(data) %in% "VEZ1",]
