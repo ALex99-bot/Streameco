@@ -1,6 +1,6 @@
 # Set the directory and file name
-directory <- "/home/pedro/PycharmProjects/Streameco"
-# directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
+# directory <- "/home/pedro/PycharmProjects/Streameco"
+directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
 # directory <-"C:/Users/asus/Desktop/Streameco"
 setwd(directory)
 
@@ -24,7 +24,7 @@ library(purrr)
 library(ggplot2)
 library(ggrepel)
 library(factoextra)
-library(xlsx)
+library(readxl)
 library(abdiv)
 library(plyr)
 library(dplyr)
@@ -32,6 +32,7 @@ library(ggpmisc)
 library(aomisc)
 library(nlstools)
 library(nlshelper)
+library(xcms)
 
 
 read_excel_sheets <- function(path, file){
@@ -248,7 +249,7 @@ env.data <- env.data[, -1]
 env_data <- as.data.frame(env.data)
 to_remove <- c("mean_light", "Artificial.500m.", "Agriculture.500m.", "Pasture.500m.", "Natural.500m.", "N.NH4", "N.NO2",
                "N.NO3", "Tmean", "Tmin", "TCV", "DOmean", "Domax", "Artificial.100m.", "Agriculture.100m.", "Pasture.100m.",
-               "Natural.100m.", "Artificial_subasin", "Agriculture_subasin", "Pasture_subasin", "Natural_subasin")
+               "Natural.100m.", "Artificial_subasin", "Agriculture_subasin", "Pasture_subasin", "Natural_subasin", "LUI_100m", "LUI_subasin")
 env_data <- env_data[ , !(names(env_data) %in% to_remove)]
 env_data_nt <- env_data[ , !(names(env_data) %in% to_remove)]
 
@@ -368,27 +369,68 @@ Fungi_div_PC1 <- nls(Fungi_species_div ~ NLS.expoDecay(PC1, a, k), data = modelo
 fungi_div_alt <- nls(Fungi_species_div ~ NLS.expoGrowth(Altitude, a, k),
              data = modelos_nt)
 
-# Fungi_species_div ~ LUI_subasin
-fungi_div_subasin <- nls(Fungi_species_div ~ NLS.expoGrowth(LUI_subasin, a, k), data = modelos_nt)
-
-# Fungi_species_div ~ LUI_100m
-fungi_div_100m <- nls(Fungi_species_div ~ NLS.expoGrowth(LUI_100m, a, k), data = modelos_nt)
-
 # Fungi_species_div ~ LUI_500m
 fungi_div_500m <- nls(Fungi_species_div ~ NLS.expoGrowth(LUI_500m, a, k), data = modelos_nt)
 
 # Fungi_species_div ~ DOmin
-fungi_div_DOmin <- nls(Fungi_species_div ~ NLS.expoGrowth(DOmin, a, k), data = modelos_nt)
-
+modelos_nt_retirado <- modelos_nt[!(row.names(modelos_nt) %in% "SEL1"),]
+fungi_div_DOmin <- nls(Fungi_species_div ~ NLS.expoGrowth(DOmin, a, k), data = modelos_nt_retirado)
+par(mfrow= c(1,1))
+plot(Fungi_species_div~DOmin, data = modelos_nt)
+text(Fungi_species_div~DOmin, data = modelos_nt ,labels=rownames(modelos_nt), cex=0.9, font=2)
 # Fungi_species_div ~ cond
 fung_div_cond <- nls(Fungi_species_div ~ NLS.expoDecay(cond, a, k), data = modelos_nt)
 
-pdf("modelos_nao_lineares.pdf")
+# Fungi_species_div ~ DIN
+fung_div_din <- nls(Fungi_species_div ~ NLS.lorentz.3(DIN, b, d, e), data = modelos_nt)
+fung_div_din <- nls(Fungi_species_div ~ SSgauss(DIN, mu, sigma, h), data = modelos_nt)
+plot(Fungi_species_div ~ DIN, data = modelos_nt)
+par(mfrow = c(1, 1))
+  plot_nls(fung_div_din)
+  r2 <- bquote(paste("R"^2 == .(format(R2nls(fung_div_din)$PseudoR2, digits = 4))))
+  pval <- bquote(paste(bold("p-value: " == .(format(summary(fung_div_din)$coefficients[2,4], digits = 5)))))
+  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+
+  par(mfrow = c(2, 2))
+  plot(nlsResiduals(fung_div_din), which = 0)
+
+# Fungi_species_div ~ P.PO4
+fung_div_po4 <- nls(Fungi_species_div ~ NLS.bragg.3(P.PO4, b, d, e), data = modelos_nt)
+fung_div_po4 <- nls(Fungi_species_div ~ SSgauss(P.PO4, mu, sigma, h), data = modelos_nt)
+plot(Fungi_species_div ~ P.PO4, data = modelos_nt)
+par(mfrow = c(1, 1))
+  plot_nls(fung_div_po4)
+  r2 <- bquote(paste("R"^2 == .(format(R2nls(fung_div_po4)$PseudoR2, digits = 4))))
+  pval <- bquote(paste(bold("p-value: " == .(format(summary(fung_div_po4)$coefficients[2,4], digits = 5)))))
+  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+
+  par(mfrow = c(2, 2))
+  plot(nlsResiduals(fung_div_po4), which = 0)
+
+# Fungi_species_div ~ Tmax
+fung_div_tmax <- nls(Fungi_species_div ~ NLS.bragg.3(Tmax, b, d, e), data = modelos_nt)
+fung_div_tmax <- nls(Fungi_species_div ~ SSgauss(Tmax, mu, sigma, h), data = modelos_nt)
+
+
+par(mfrow = c(1, 1))
+  plot_nls(fung_div_tmax)
+  r2 <- bquote(paste("R"^2 == .(format(R2nls(fung_div_tmax)$PseudoR2, digits = 4))))
+  pval <- bquote(paste(bold("p-value: " == .(format(summary(fung_div_tmax)$coefficients[2,4], digits = 5)))))
+  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+
+  par(mfrow = c(2, 2))
+  plot(nlsResiduals(fung_div_tmax), which = 0)
+
+
+pdf("modelos_nao_lineares_fungos.pdf")
   # Fungi_species_div ~ PC1
-  par(mfrow = c(1, 1))
+  par(mfrow = c(4, 4))
   plot_nls(Fungi_div_PC1)
   r2 <- bquote(paste("R"^2 == .(format(R2nls(Fungi_div_PC1)$PseudoR2, digits = 4))))
-  pval <- bquote(paste(bold("p-value: ", .(format(summary(Fungi_div_PC1)$coefficients[2,4], digits = 5)))))
+  pval <- bquote(paste(bold("p-value: " == .(format(summary(Fungi_div_PC1)$coefficients[2,4], digits = 5)))))
   mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
   mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
 
@@ -399,7 +441,7 @@ pdf("modelos_nao_lineares.pdf")
   par(mfrow = c(1, 1))
   plot_nls(fungi_div_alt)
   r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_alt)$PseudoR2, digits = 4))))
-  pval <- bquote(paste(bold("p-value: ", .(format(summary(fungi_div_alt)$coefficients[2,4], digits = 5)))))
+  pval <- bquote(paste(bold("p-value: " == .(format(summary(fungi_div_alt)$coefficients[2,4], digits = 5)))))
   mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
   mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
 
@@ -410,7 +452,7 @@ pdf("modelos_nao_lineares.pdf")
   par(mfrow = c(1, 1))
   plot_nls(fungi_div_subasin)
   r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_subasin)$PseudoR2, digits = 4))))
-  pval <- bquote(paste(bold("p-value: ", .(format(summary(fungi_div_subasin)$coefficients[2,4], digits = 5)))))
+  pval <- bquote(paste(bold("p-value: " == .(format(summary(fungi_div_subasin)$coefficients[2,4], digits = 5)))))
   mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
   mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
 
@@ -421,7 +463,7 @@ pdf("modelos_nao_lineares.pdf")
   par(mfrow = c(1, 1))
   plot_nls(fungi_div_100m)
   r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_100m)$PseudoR2, digits = 4))))
-  pval <- bquote(paste(bold("p-value: ", .(format(summary(fungi_div_100m)$coefficients[2,4], digits = 5)))))
+  pval <- bquote(paste(bold("p-value: " == .(format(summary(fungi_div_100m)$coefficients[2,4], digits = 5)))))
   mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
   mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
 
@@ -432,7 +474,7 @@ pdf("modelos_nao_lineares.pdf")
   par(mfrow = c(1, 1))
   plot_nls(fungi_div_500m)
   r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_500m)$PseudoR2, digits = 4))))
-  pval <- bquote(paste(bold("p-value: ", .(format(summary(fungi_div_500m)$coefficients[2,4], digits = 5)))))
+  pval <- bquote(paste(bold("p-value: " == .(format(summary(fungi_div_500m)$coefficients[2,4], digits = 5)))))
   mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
   mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
 
@@ -443,7 +485,7 @@ pdf("modelos_nao_lineares.pdf")
   par(mfrow = c(1, 1))
   plot_nls(fungi_div_DOmin)
   r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_DOmin)$PseudoR2, digits = 4))))
-  pval <- bquote(paste(bold("p-value: ", .(format(summary(fungi_div_DOmin)$coefficients[2,4], digits = 5)))))
+  pval <- bquote(paste(bold("p-value: " == .(format(summary(fungi_div_DOmin)$coefficients[2,4], digits = 5)))))
   mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
   mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
 
@@ -455,7 +497,7 @@ pdf("modelos_nao_lineares.pdf")
   plot_nls(fung_div_cond)
   # Obtain R-squared value
   r2 <- bquote(paste("R"^2 == .(format(R2nls(fung_div_cond)$PseudoR2, digits = 4))))
-  pval <- bquote(paste(bold("p-value: ", .(format(summary(fung_div_cond)$coefficients[2,4], digits = 5)))))
+  pval <- bquote(paste(bold("p-value: " == .(format(summary(fung_div_cond)$coefficients[2,4], digits = 5)))))
   mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
   mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
 
@@ -463,13 +505,6 @@ pdf("modelos_nao_lineares.pdf")
   plot(nlsResiduals(fung_div_cond), which = 0)
 
 dev.off()
-
-cenas <- summary(fung_div_cond)
-cenas$coefficients
-# nls fit altitude
-model <- nls(Fungi_species_div ~ NLS.expoDecay(Altitude, a, k),
-             data = modelos_nt)
-
 
 
 # nls fit
@@ -516,17 +551,18 @@ smooth1 <- predict(mod2, data.frame(qbr = seq(0.1,95)))
 line(smooth1)
 summary(mod2)
 
-par(mfrow=c(1,1))
+
 
 pdf("modelos_lineares.pdf")
 for (i in colnames(indices2)) {
-  for(j in colnames(env_data_nt)) {
-    dados <- as.data.frame(cbind(indices2[[i]], env_data_nt[[j]]))
+  for(j in colnames(env_data)) {
+    dados <- as.data.frame(cbind(indices2[[i]], env_data[[j]]))
     par(mfrow=c(1,1))
-    plot(indices2[[i]] ~ env_data_nt[[j]], data = dados, xlab = colnames(env_data_nt[j]), ylab = colnames(indices2[i]))
-    mod <- lm(indices2[[i]] ~ env_data_nt[[j]], data = dados)
+    plot(indices2[[i]] ~ env_data[[j]], data = dados, xlab = colnames(env_data[j]), ylab = colnames(indices2[i]))
+    mod <- lm(indices2[[i]] ~ env_data[[j]], data = dados)
     r2 <- bquote(paste(bold(R^2 == .(summary(mod)$r.squared))))
-    pval <- bquote(paste(bold("p-value: ", .(summary(mod)$coefficients[2,4]))))
+    x <- as.numeric(summary(mod)$coefficients[2,4])
+    pval <- bquote(paste(bold("p-value: " == .(round(x, 4)))))
     mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
     mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
     abline(mod)
