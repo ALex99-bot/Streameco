@@ -33,6 +33,7 @@ library(aomisc)
 library(nlstools)
 library(nlshelper)
 library(xcms)
+library(hillR)
 
 
 read_excel_sheets <- function(path, file){
@@ -249,7 +250,7 @@ env.data <- env.data[, -1]
 env_data <- as.data.frame(env.data)
 to_remove <- c("mean_light", "Artificial.500m.", "Agriculture.500m.", "Pasture.500m.", "Natural.500m.", "N.NH4", "N.NO2",
                "N.NO3", "Tmean", "Tmin", "TCV", "DOmean", "Domax", "Artificial.100m.", "Agriculture.100m.", "Pasture.100m.",
-               "Natural.100m.", "Artificial_subasin", "Agriculture_subasin", "Pasture_subasin", "Natural_subasin", "LUI_100m", "LUI_subasin")
+               "Natural.100m.", "Artificial_subasin", "Agriculture_subasin", "Pasture_subasin", "Natural_subasin", "LUI_100m", "LUI_500m")
 env_data <- env_data[ , !(names(env_data) %in% to_remove)]
 env_data_nt <- env_data[ , !(names(env_data) %in% to_remove)]
 
@@ -285,6 +286,7 @@ env_data$Discharge <- log(env_data$Discharge+0.0001)
 diversidade <- lapply(bact_fung_taxa, function(x) specnumber(t(x)))
 
 shannon_index <- lapply(bact_fung_taxa, function(x) diversity(t(x), index = "shannon", base = exp(1)))
+hill_shannon <- lapply(bact_fung_taxa, function(x) hill_taxa(t(x), q = 1, MARGIN = 1, base = exp(1)))
 
 pielou_index <- lapply(bact_fung_taxa, function(x) diversity(t(x))/log(specnumber(t(x))))
 
@@ -312,10 +314,6 @@ var_exp <- (PCA_env$eig*100)/sum(PCA_env$eig)
 
 env_data <- cbind(env_data, PC1 = PCA_env$li[,1])
 env_data_nt <- cbind(env_data_nt, PC1 = PCA_env$li[,1])
-
-# PCA_dataframe <- map2(diversidade, PCA_env, function(ind, env) {
-#   data.frame(bioindex = ind, environmental_data = env$li[,1])
-# })
 
 indices <- read_excel("bioindices.xlsx")
 indices <- as.data.frame(indices)
@@ -361,7 +359,7 @@ summary(mod)
 
 # modelos_nt2 <- modelos_nt[!(row.names(modelos_nt) %in% "ROD1"),]
 
-
+########## Fungos #############
 # Fungi_species_div ~ PC1
 Fungi_div_PC1 <- nls(Fungi_species_div ~ NLS.expoDecay(PC1, a, k), data = modelos_nt)
 
@@ -369,15 +367,13 @@ Fungi_div_PC1 <- nls(Fungi_species_div ~ NLS.expoDecay(PC1, a, k), data = modelo
 fungi_div_alt <- nls(Fungi_species_div ~ NLS.expoGrowth(Altitude, a, k),
              data = modelos_nt)
 
-# Fungi_species_div ~ LUI_500m
-fungi_div_500m <- nls(Fungi_species_div ~ NLS.expoGrowth(LUI_500m, a, k), data = modelos_nt)
+# Fungi_species_div ~ LUI_subasin
+fungi_div_500m <- nls(Fungi_species_div ~ NLS.expoGrowth(LUI_subasin, a, k), data = modelos_nt)
 
 # Fungi_species_div ~ DOmin
 modelos_nt_retirado <- modelos_nt[!(row.names(modelos_nt) %in% "SEL1"),]
 fungi_div_DOmin <- nls(Fungi_species_div ~ NLS.expoGrowth(DOmin, a, k), data = modelos_nt_retirado)
-par(mfrow= c(1,1))
-plot(Fungi_species_div~DOmin, data = modelos_nt)
-text(Fungi_species_div~DOmin, data = modelos_nt ,labels=rownames(modelos_nt), cex=0.9, font=2)
+
 # Fungi_species_div ~ cond
 fung_div_cond <- nls(Fungi_species_div ~ NLS.expoDecay(cond, a, k), data = modelos_nt)
 
@@ -506,6 +502,148 @@ pdf("modelos_nao_lineares_fungos.pdf")
 
 dev.off()
 
+########## Bactérias #############
+# Bacteria_species_div ~ PC1
+Bacteria_div_PC1 <- nls(Bacteria_species_div ~ NLS.expoDecay(qbr, a, k), data = modelos_nt)
+
+# Fungi_species_div ~ alt
+fungi_div_alt <- nls(Fungi_species_div ~ NLS.expoGrowth(Altitude, a, k),
+             data = modelos_nt)
+
+# Fungi_species_div ~ LUI_500m
+fungi_div_500m <- nls(Fungi_species_div ~ NLS.expoGrowth(LUI_500m, a, k), data = modelos_nt)
+
+# Fungi_species_div ~ DOmin
+modelos_nt_retirado <- modelos_nt[!(row.names(modelos_nt) %in% "SEL1"),]
+fungi_div_DOmin <- nls(Fungi_species_div ~ NLS.expoGrowth(DOmin, a, k), data = modelos_nt_retirado)
+
+# Fungi_species_div ~ cond
+fung_div_cond <- nls(Fungi_species_div ~ NLS.expoDecay(cond, a, k), data = modelos_nt)
+
+# Fungi_species_div ~ DIN
+fung_div_din <- nls(Fungi_species_div ~ NLS.lorentz.3(DIN, b, d, e), data = modelos_nt)
+fung_div_din <- nls(Fungi_species_div ~ SSgauss(DIN, mu, sigma, h), data = modelos_nt)
+plot(Fungi_species_div ~ DIN, data = modelos_nt)
+par(mfrow = c(1, 1))
+  plot_nls(fung_div_din)
+  r2 <- bquote(paste("R"^2 == .(format(R2nls(fung_div_din)$PseudoR2, digits = 4))))
+  pval <- bquote(paste(bold("p-value: " == .(format(summary(fung_div_din)$coefficients[2,4], digits = 5)))))
+  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+
+  par(mfrow = c(2, 2))
+  plot(nlsResiduals(fung_div_din), which = 0)
+
+# Fungi_species_div ~ P.PO4
+fung_div_po4 <- nls(Fungi_species_div ~ NLS.bragg.3(P.PO4, b, d, e), data = modelos_nt)
+fung_div_po4 <- nls(Fungi_species_div ~ SSgauss(P.PO4, mu, sigma, h), data = modelos_nt)
+plot(Fungi_species_div ~ P.PO4, data = modelos_nt)
+par(mfrow = c(1, 1))
+  plot_nls(fung_div_po4)
+  r2 <- bquote(paste("R"^2 == .(format(R2nls(fung_div_po4)$PseudoR2, digits = 4))))
+  pval <- bquote(paste(bold("p-value: " == .(format(summary(fung_div_po4)$coefficients[2,4], digits = 5)))))
+  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+
+  par(mfrow = c(2, 2))
+  plot(nlsResiduals(fung_div_po4), which = 0)
+
+# Fungi_species_div ~ Tmax
+fung_div_tmax <- nls(Fungi_species_div ~ NLS.bragg.3(Tmax, b, d, e), data = modelos_nt)
+fung_div_tmax <- nls(Fungi_species_div ~ SSgauss(Tmax, mu, sigma, h), data = modelos_nt)
+
+
+par(mfrow = c(1, 1))
+  plot_nls(fung_div_tmax)
+  r2 <- bquote(paste("R"^2 == .(format(R2nls(fung_div_tmax)$PseudoR2, digits = 4))))
+  pval <- bquote(paste(bold("p-value: " == .(format(summary(fung_div_tmax)$coefficients[2,4], digits = 5)))))
+  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+
+  par(mfrow = c(2, 2))
+  plot(nlsResiduals(fung_div_tmax), which = 0)
+
+
+pdf("modelos_nao_lineares_bacterias.pdf")
+  # Bacteria_species_div ~ PC1
+  par(mfrow = c(4, 4))
+  plot_nls(Fungi_div_PC1)
+  r2 <- bquote(paste("R"^2 == .(format(R2nls(Fungi_div_PC1)$PseudoR2, digits = 4))))
+  pval <- bquote(paste(bold("p-value: " == .(format(summary(Fungi_div_PC1)$coefficients[2,4], digits = 5)))))
+  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+
+  par(mfrow = c(2, 2))
+  plot(nlsResiduals(Fungi_div_PC1), which = 0)
+
+  # Fungi_species_div ~ alt
+  par(mfrow = c(1, 1))
+  plot_nls(fungi_div_alt)
+  r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_alt)$PseudoR2, digits = 4))))
+  pval <- bquote(paste(bold("p-value: " == .(format(summary(fungi_div_alt)$coefficients[2,4], digits = 5)))))
+  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+
+  par(mfrow = c(2, 2))
+  plot(nlsResiduals(fungi_div_alt), which = 0)
+
+  # Fungi_species_div ~ LUI_subbasin
+  par(mfrow = c(1, 1))
+  plot_nls(fungi_div_subasin)
+  r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_subasin)$PseudoR2, digits = 4))))
+  pval <- bquote(paste(bold("p-value: " == .(format(summary(fungi_div_subasin)$coefficients[2,4], digits = 5)))))
+  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+
+  par(mfrow = c(2, 2))
+  plot(nlsResiduals(fungi_div_subasin), which = 0)
+
+  # Fungi_species_div ~ LUI_100m
+  par(mfrow = c(1, 1))
+  plot_nls(fungi_div_100m)
+  r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_100m)$PseudoR2, digits = 4))))
+  pval <- bquote(paste(bold("p-value: " == .(format(summary(fungi_div_100m)$coefficients[2,4], digits = 5)))))
+  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+
+  par(mfrow = c(2, 2))
+  plot(nlsResiduals(fungi_div_100m), which = 0)
+
+  # Fungi_species_div ~ LUI_500m
+  par(mfrow = c(1, 1))
+  plot_nls(fungi_div_500m)
+  r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_500m)$PseudoR2, digits = 4))))
+  pval <- bquote(paste(bold("p-value: " == .(format(summary(fungi_div_500m)$coefficients[2,4], digits = 5)))))
+  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+
+  par(mfrow = c(2, 2))
+  plot(nlsResiduals(fungi_div_500m), which = 0)
+
+  # Fungi_species_div ~ DOmin
+  par(mfrow = c(1, 1))
+  plot_nls(fungi_div_DOmin)
+  r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_DOmin)$PseudoR2, digits = 4))))
+  pval <- bquote(paste(bold("p-value: " == .(format(summary(fungi_div_DOmin)$coefficients[2,4], digits = 5)))))
+  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+
+  par(mfrow = c(2, 2))
+  plot(nlsResiduals(fungi_div_DOmin), which = 0)
+
+  # Fungi_species_div ~ cond
+  par(mfrow = c(1, 1))
+  plot_nls(fung_div_cond)
+  # Obtain R-squared value
+  r2 <- bquote(paste("R"^2 == .(format(R2nls(fung_div_cond)$PseudoR2, digits = 4))))
+  pval <- bquote(paste(bold("p-value: " == .(format(summary(fung_div_cond)$coefficients[2,4], digits = 5)))))
+  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+
+  par(mfrow = c(2, 2))
+  plot(nlsResiduals(fung_div_cond), which = 0)
+
+dev.off()
 
 # nls fit
 Fung_div_qbr <- nls(Fungi_species_div ~ NLS.expoGrowth(qbr, a, k),
@@ -517,49 +655,27 @@ residuos_expodecay <- nlsResiduals(Fung_div_qbr)
 par(mfrow = c(2, 2))
 plot(residuos_expodecay, which = 0)
 
-# drm fit
-model <- drm(Fungi_species_div ~ qbr, fct = DRC.expoGrowth(),
-             data = modelos_nt)
-summary(model)
-plot(model, log="", main = "Logistic function")
 
-# drm fit
-model <- drm(Fungi_species_div ~ qbr, fct = L.3(), data = modelos_nt)
-model.2 <- drm(Fungi_species_div ~ qbr, fct = L.4(), data = modelos_nt)
-model.3 <- drm(Fungi_species_div/max(Fungi_species_div) ~ qbr, fct = L.2(), data = modelos_nt)
-summary(model.3)
-plot(model.2, log="", main = "Logistic function")
+dados<- cbind("Bacteria_species_reads" = hill_shannon$Bacteria_species_reads,
+                      "Fungi_species_reads" = hill_shannon$Fungi_species_reads)
 
-fit <- lm(Fungi_species_div ~ poly(qbr, 2), data = modelos_nt)
-summary(fit)
-ggplot(modelos_nt, aes(qbr, Fungi_species_div)) +
-  geom_point() +
-  geom_line(aes(qbr, predict(fit))) +
-  ggtitle("Quadratic Regression")
+class(hill_shannon$Bacteria_species_reads)
+dados <- as.data.frame(dados)
 
-#jpeg("bact_riqueza_QBR.jpg")
-par(mfrow=c(1,1))
-plot(Bacteria_species_div~qbr, data = modelos_nt, xlab = "QBR", ylab = "Bacteria species richness")
-# r2 <- bquote(paste(bold(R^2 == .(11.6))))
-# mtext("p<0.01", line=-1.5, adj = 1, cex = 1.2, font = 2)
-# mtext(r2, line=-2.5, adj = 1, cex = 1.2, font = 2)
-# mod2 <- glm(Bacteria_species_div~I(1/qbr), data = modelos_nt, family = gaussian("inverse"))
-# mod2 <- nls(Bacteria_species_div~Vm*qbr/(K+qbr), data=modelos_nt,start=list(K=1, Vm=95), trace = TRUE)
-# mod2 <- nls(Bacteria_species_div~SSlogis(log(qbr+0.001)), data=modelos_nt)
-mod2 <- loess(Bacteria_species_div~qbr, data=modelos_nt)
-smooth1 <- predict(mod2, data.frame(qbr = seq(0.1,95)))
-line(smooth1)
-summary(mod2)
+dados <- cbind(dados, env_data)
+class(dados)
+class(dados$mean.Velocity)
+View(dados$mean.Velocity)
+dim(dados)
 
-
-
-pdf("modelos_lineares.pdf")
-for (i in colnames(indices2)) {
+pdf("modelos_lineares_hill.pdf")
+for (i in colnames(hill.shannon)) {
   for(j in colnames(env_data)) {
-    dados <- as.data.frame(cbind(indices2[[i]], env_data[[j]]))
+    dados <- as.data.frame(cbind(hill.shannon[[i]], env_data[[j]]))
+    #print(dados)
     par(mfrow=c(1,1))
-    plot(indices2[[i]] ~ env_data[[j]], data = dados, xlab = colnames(env_data[j]), ylab = colnames(indices2[i]))
-    mod <- lm(indices2[[i]] ~ env_data[[j]], data = dados)
+    plot(hill.shannon[[i]] ~ env_data[[j]], data = dados, xlab = colnames(env_data[j]), ylab = colnames(hill.shannon[i]))
+    mod <- lm(hill.shannon[[i]] ~ env_data[[j]], data = dados)
     r2 <- bquote(paste(bold(R^2 == .(summary(mod)$r.squared))))
     x <- as.numeric(summary(mod)$coefficients[2,4])
     pval <- bquote(paste(bold("p-value: " == .(round(x, 4)))))
@@ -570,133 +686,5 @@ for (i in colnames(indices2)) {
     plot(mod)
   }
 }
-dev.off()
-
-# jpeg("pca_env.jpg")
-# fviz_eig(PCA_env)
-# fviz_pca_ind(PCA_env,
-#              col.ind = "cos2", # Color by the quality of representation
-#              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
-#              repel = TRUE     # Avoid text overlapping
-#              )
-#
-# fviz_pca_var(PCA_env,
-#              col.var = "contrib", # Color by contributions to the PC
-#              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
-#              repel = TRUE     # Avoid text overlapping
-#              )
-#
-# fviz_pca_biplot(PCA_env, repel = TRUE,
-#                 col.var = "#2E9FDF", # Variables color
-#                 col.ind = "#696969"  # Individuals color
-#                 )
-
-# dev.off()
-
-
-# all_graphs <- lapply(seq_along(PCA_dataframe), function(i) {
-#   all_dataframe <- PCA_dataframe[[i]]
-#   ggplot(all_dataframe, aes(x=environmental_data, y=bioindex)) +
-#     geom_point() +
-#     # geom_text(aes(label = rownames(all_dataframe))) +
-#     #geom_text(aes(label = rownames(all_dataframe)), size = 2, nudge_x = 1, nudge_y = 0.03) +
-#     ggtitle(names(PCA_dataframe)[i]) +  # add the dataframe name as the plot title
-#     labs(x="Environmental variables", y="Diversity index") +
-#     theme(legend.position = "none")
-# })
-
-# pdf("PCA_div.pdf")
-# for (i in 1:length(all_graphs)) {
-#   print(all_graphs[[i]])
-# }
-# dev.off()
-
-
-# div <- as.data.frame(scale(div))
-# env.data <- env.data[, c(1, 2, 4, 5, 6, 15, 17, 22, 26, 28, 29, 30, 31)]
-# env.data2 <- as.data.frame(scale(env.data))
-# dudi.pca(env.data2, center = TRUE, scale = FALSE, scannf = F,nf=4)->metric.pca
-# biplot(metric.pca)
-# metric.pca$li$Axis1 -> PCA1
-# metric.pca$li$Axis2 -> PCA2
-# # PCA Axis importance (explained variance)
-# round(metric.pca$eig[1:4]/sum(metric.pca$eig),2)
-# env.data <- cbind(env.data, PCA1, PCA2)
-# env.data <- as.data.frame(scale(env.data))
-
-# pdf("Gam_models.pdf")
-# for (i in 1:length(env.data)) {
-#   for(j in 1:length(div)) {
-#     ##plot(div2[,y]~e.data[,i], xlab=colnames(e.data[,i]), ylab=colnames(div2[,y]))
-#     #   }}
-#     print(i)
-#     gam<-gam(div[,j]~s(env.data[,i], fx = FALSE, k=-1,  bs = "cr"))
-#     x<-summary(gam)
-#     p <- as.character(round(as.numeric(unlist((x$s.table[, 4]))), 3))
-#     if (p<=0.05) {
-#       plot(gam, main='Diversity', xlab=colnames(env.data[i]), ylab=colnames(div[j]), se=TRUE)
-#       p <- if (p<=0.001) {as.character("<0.001***")} else if (p<=0.01) {as.character("<0.01**")
-#       }else if (p<=0.05) {as.character("<0.05*")} else {as.character("=n.s.")}
-#       p <- paste("p", p)
-#       r2 <-bquote(paste(bold(r^2 == .(as.character(round(as.numeric(x$r.sq),3))))))
-#       dev <- as.character(round(as.numeric(x$dev.expl), 3))
-#       dev <-(paste("dev", "=",dev))
-#       mtext(p, line=-1.5, adj = 1, cex = 1.2, font = 2)
-#       mtext(r2, line=-2.5, adj = 1, cex = 1.2, font = 2)
-#       mtext(dev, line=-3.5, adj = 1, cex = 1.2, font = 2)
-#       par(mfrow=c(2,2))
-#       gam.check (gam)
-#       par(mfrow=c(1,1))
-#     }
-#   }
-# }
-#
-# biplot(metric.pca)
-
-# dev.off()
-
-# row.names(fun_order_reads) <- fun_order_reads[, 1]
-# fun_order_reads <- fun_order_reads[, -1]
-# fun_order_reads <- as.data.frame(fun_order_reads)
-#
-# nmds <- metaMDS(fun_order_reads, distance = "bray")
-# nmds
-
-# plot(nmds)
-# stressplot(nmds)
-# plot(nmds, type = "n")+ #displays empty ordination space
-#   ggrepel::geom_text_repel(data = nmds, aes(x=NMDS1, y=NMDS2, label = Species), cex = 3, direction = "both", segment.size = 0.25)
-# points(nmds, display = "sites", col = "blue", labels(row.names(nmds$points)))
-# # displays site points where symbols (pch) are different management options and colour (col) are different land uses
-# legend("topright", legend = c(levels(dune.env$Management), levels(dune.env$Use)), pch = c(16, 8, 17, 11, 16, 16, 16), col = c("black","black","black","black","blue", "orange", "black"), bty = "n", cex = 1) # displays symbol and colour legend
-# legend("topleft", "stress = 0.118", bty = "n", cex = 1) # displays legend text of stress value
-# ggrepel::geom_text_repel(data = sig.spp.scrs, aes(x=NMDS1, y=NMDS2, label = Species), cex = 3, direction = "both", segment.size = 0.25)
-#
-# plot(div$shannon_bact~env.data$mean.Velocity)
-
-modelos_nt3 <- cbind(modelos_nt, "Bacteria_phylum_pielou" = indices$Bacteria_phylum_pielou)
-
-plot(Bacteria_phylum_pielou ~ PC1, data = modelos_nt3)
-mod <- lm(Bacteria_phylum_pielou ~ PC1, data = modelos_nt3)
-abline(mod)
-summary(mod)
-par(mfrow=c(2,2))
-plot(mod)
-
-data <- as.data.frame(cbind(indices$Bacteria_phylum_pielou, env_data_nt$`PCA_env$li[, 1]`))
-data2 <- data[!row.names(data) %in% "VEZ1",]
-row.names(data) <- row.names(indices)
-
-jpeg("Pielou_bacteria_phylum.jpg")
-
-ggplot(data, aes(x=V2, y=V1)) +
-   geom_point() +
-      geom_text(aes(label = rownames(data)), nudge_y = 0.005) +
-   geom_smooth(method='lm') +
-     #geom_text(aes(label = rownames(all_dataframe)), size = 2, nudge_x = 1, nudge_y = 0.03) +
-     ggtitle(names("Bacteria Phylum")) +  # add the dataframe name as the plot title
-     labs(x="Environmental variables", y="Pielou index") +
-     theme(legend.position = "none")
-
 dev.off()
 
