@@ -52,197 +52,12 @@ excel2dataframe <- function(x) {
 
 bact_fung_taxa <- lapply(read_excel_sheets(path, file), excel2dataframe)
 
-# list2env(bact_fung_taxa, envir=.GlobalEnv)
-
-# nmds <- lapply(bact_fung_taxa, metaMDS, distance = "bray")
-
-# # organise4plot <- function (nmds) {
-# #   Site <- as.data.frame(nmds$points)
-# #   Site <- as.data.frame(cbind(Site, name="Species"))
-# #   Species <- as.data.frame(nmds$species)
-# #   Species <- as.data.frame(cbind(Species, name="Site"))
-# #   df <- rbind(Site, Species)
-# # }
-#
-# prepare_nmds_data <- function(nmds) {
-#   if (!is.numeric(nmds$points) || !is.numeric(nmds$species)) {
-#     stop("Input must be a list with 'points' and 'species' as numeric data frames")
-#   }
-#
-#   Site <- data.frame(nmds$points, name="Species")
-#   Species <- data.frame(nmds$species, name="Site")
-#   df <- rbind(Site, Species)
-#   return(df)
-# }
-#
-# # all_nmds <- lapply(nmds, prepare_nmds_data)
-# all_nmds <- sapply(nmds, FUN = prepare_nmds_data, simplify = FALSE, USE.NAMES = TRUE)
-#
-# plot_text = function (data, df_name) {
-#     ggplot(data, aes(x=MDS1, y=MDS2)) +
-#     geom_text_repel(aes(color=name, label=row.names(data)))+labs(col="Legend")+
-#     guides(fill="name") +
-#     theme_gray() +
-#     labs(title=df_name)+
-#     scale_color_manual(labels = c("Site", strsplit(df_name, split = "_")[[1]][2]), values = c("red", "blue"))
-# }
-#
-# scatter_plot = function (data, df_name) {
-#   ggplot() +
-#   geom_point(data = data, aes(x = MDS1, y = MDS2, color = name)) +
-#   labs(col = "Legend") +
-#   guides(fill = "name") +
-#   theme_gray() +
-#   labs(title = df_name) +
-#   scale_color_manual(labels = c("Site", strsplit(df_name, split = "_")[[1]][2]), values = c("red", "blue"))
-# }
-#
-# myplots_text <- lapply(names(all_nmds), function(df_name) {
-#   plot_text(all_nmds[[df_name]], df_name)
-# })
-#
-# myplots_scatter <- lapply(names(all_nmds), function(df_name) {
-#   scatter_plot(all_nmds[[df_name]], df_name)
-# })
-#
-# pdf("top10_nomes.pdf")
-# for (i in 1:length(myplots_text)) {
-#   print(myplots_text[[i]])
-# }
-# dev.off()
-#
-# pdf("top10_pontos.pdf")
-# for (i in 1:length(myplots_scatter)) {
-#   print(myplots_scatter[[i]])
-# }
-# dev.off()
-
-# Índice de Shannon
-# shannon_by_column <- function(data, name) {
-#   # Create an empty data frame to store the results
-#   shannon_df <- data.frame(shannon = numeric(), row.names = character(), stringsAsFactors = FALSE)
-#   for(i in 1:ncol(data)) {       # for-loop over columns
-#   shannon <- data.frame(shannon = diversity(t(data[,i]), index = "shannon", MARGIN = 1, base = exp(1)),
-#                          row.names = colnames(data)[i])
-#   # Add the current result to the shannon_df data frame
-#   shannon_df <- rbind(shannon_df, shannon)
-#   }
-#   # Name of dataframe
-#   name_col <- paste("shannon_index", sub("_([^_]*)$", "", name), sep="_")
-#   colnames(shannon_df)[1] <- name_col
-#   return(shannon_df)
-# }
-#
-#
-# shannon <- lapply(names(bact_fung_taxa), function(df_name) {
-#   shannon_by_column(bact_fung_taxa[[df_name]], df_name)
-# })
-#
-# # Índice de Pielou
-# pielou_by_column <- function(data, name) {
-#   # Create an empty data frame to store the results
-#   pielou_df <- data.frame(pielou = numeric(), row.names = character(), stringsAsFactors = FALSE)
-#   for(i in 1:ncol(data)) {       # for-loop over columns
-#   pielou <- data.frame(pielou = diversity(t(data[,i]))/log(specnumber(t(data[,i]))),
-#                          row.names = colnames(data)[i])
-#   # Add the current result to the shannon_df data frame
-#   pielou_df <- rbind(pielou_df, pielou)
-#   }
-#   # Name of dataframe
-#   name_col <- paste("pielou_index", sub("_([^_]*)$", "", name), sep="_")
-#   colnames(pielou_df)[1] <- name_col
-#   return(pielou_df)
-# }
-#
-# pielou <- lapply(names(bact_fung_taxa), function(df_name) {
-#   pielou_by_column(bact_fung_taxa[[df_name]], df_name)
-# })
-#
-# # Bray-Curtis
-# bray <- lapply(bact_fung_taxa, function(x) vegdist(t(x)))
-#
-#
-# # Margalef
-# margalef_by_column <- function(data, name) {
-#   # Create an empty data frame to store the results
-#   margalef_df <- data.frame(margalef = numeric(), row.names = character(), stringsAsFactors = FALSE)
-#   for(i in 1:ncol(data)) {       # for-loop over columns
-#   margalef <- data.frame(margalef = margalef(data[, i]),
-#                          row.names = colnames(data)[i])
-#   # Add the current result to the shannon_df data frame
-#   margalef_df <- rbind(margalef_df, margalef)
-#   }
-#   # Name of dataframe
-#   name_col <- paste("margalef_index", sub("_([^_]*)$", "", name), sep="_")
-#   colnames(margalef_df)[1] <- name_col
-#   return(margalef_df)
-# }
-#
-# margalef_ind <- lapply(names(bact_fung_taxa), function(df_name) {
-#   margalef_by_column(bact_fung_taxa[[df_name]], df_name)
-# })
-#
-# # Simpson
-# simpson_by_column <- function(data, name) {
-#   # Create an empty data frame to store the results
-#   simpson_df <- data.frame(simpson = numeric(), row.names = character(), stringsAsFactors = FALSE)
-#   for(i in 1:ncol(data)) {       # for-loop over columns
-#   simpson <- data.frame(simpson = diversity(t(data[,i]), index = "simpson", MARGIN = 1, base = exp(1)),
-#                          row.names = colnames(data)[i])
-#   # Add the current result to the shannon_df data frame
-#   simpson_df <- rbind(simpson_df, simpson)
-#   }
-#   # Name of dataframe
-#   name_col <- paste("simpson_index", sub("_([^_]*)$", "", name), sep="_")
-#   colnames(simpson_df)[1] <- name_col
-#   return(simpson_df)
-# }
-#
-#
-# simpson_ind <- lapply(names(bact_fung_taxa), function(df_name) {
-#   simpson_by_column(bact_fung_taxa[[df_name]], df_name)
-# })
-#
-# # # Guardar excel dos índices
-# wb <- createWorkbook()
-# #
-# sheet <- createSheet(wb, "shannon")
-#
-# addDataFrame(shannon_index, sheet=sheet,
-#              startColumn=1, row.names=FALSE)
-#
-# sheet <- createSheet(wb, "pielou")
-#
-# addDataFrame(pielou_index, sheet=sheet,
-#              startColumn=1, row.names=FALSE)
-#
-# sheet <- createSheet(wb, "margalef")
-#
-# addDataFrame(margalef_index, sheet=sheet,
-#              startColumn=1, row.names=FALSE)
-#
-# sheet <- createSheet(wb, "simpson")
-#
-# addDataFrame(simpson_index, sheet=sheet,
-#              startColumn=1, row.names=FALSE)
-#
-# sheet <- createSheet(wb,"div")
-#
-# addDataFrame(diversidade, sheet=sheet,
-#              startColumn=1, row.names=TRUE)
-#
-# saveWorkbook(wb, "bioindices2.xlsx")
-
 # Variáveis ambientais
 bacias <- read_excel("STREAMECO database - environment (copy).xlsx", "LandUse")
 bacias <- as.data.frame(bacias)
 river_basin <- bacias[2:nrow(bacias), 3]
 river_basin <- as.data.frame(river_basin)
 row.names(river_basin) <- bacias[2:51, 1]
-
-# ggplot(bacias, aes(lon, lat)) +
-#   geom_point() +
-#   geom_text_repel(aes(label = code))
 
 env.data <- read.table("var ambientais.txt", sep="\t", dec=".", header=T)
 row.names(env.data) <- env.data$code
@@ -263,13 +78,6 @@ env_data$cond <- log(env_data$cond+0.0001)
 env_data$mean.Depth <- log(env_data$mean.Depth+0.0001)
 env_data$mean.Velocity <- sqrt(env_data$mean.Velocity)
 env_data$Discharge <- log(env_data$Discharge+0.0001)
-
-# river_basin$alt <- cut(env_data_nt$Altitude,
-#               breaks=c(0, 200, 400, 600, 800, 1000),
-#               labels=c('<200', '200-400', '400-600', '600-800', ">800"))
-#
-# river_basin$river_basin <- as.factor(river_basin$river_basin)
-# river_basin$alt <- as.factor(river_basin$alt)
 
 # par(mfrow=c(1, 1))
 # hist(env_data$LUI_100m)
@@ -342,9 +150,11 @@ indices2 <- indices[,c("Bacteria_species_div","Bacteria_species_shannon",
 #
 # saveWorkbook(wb, "correlacoes.xlsx")
 
-modelos_nt <- as.data.frame(cbind(indices2, env_data_nt))
+modelos <- as.data.frame(cbind(indices2, env_data))
+modelos <- cbind(modelos, vel = modelos$mean.Velocity)
 
-modelos_nt<-cbind(modelos_nt, vel = modelos_nt$mean.Velocity)
+modelos_nt <- as.data.frame(cbind(indices2, env_data_nt))
+modelos_nt <- cbind(modelos_nt, vel = modelos_nt$mean.Velocity)
 
 # jpeg("bact_shannon_velocidade.jpg")
 par(mfrow=c(1,1))
@@ -368,7 +178,7 @@ fungi_div_alt <- nls(Fungi_species_div ~ NLS.expoGrowth(Altitude, a, k),
              data = modelos_nt)
 
 # Fungi_species_div ~ LUI_subasin
-fungi_div_500m <- nls(Fungi_species_div ~ NLS.expoGrowth(LUI_subasin, a, k), data = modelos_nt)
+fungi_div_subasin <- nls(Fungi_species_div ~ NLS.expoGrowth(LUI_subasin, a, k), data = modelos_nt)
 
 # Fungi_species_div ~ DOmin
 modelos_nt_retirado <- modelos_nt[!(row.names(modelos_nt) %in% "SEL1"),]
@@ -419,6 +229,20 @@ par(mfrow = c(1, 1))
 
   par(mfrow = c(2, 2))
   plot(nlsResiduals(fung_div_tmax), which = 0)
+
+# Fungi_species_shannon ~ ihf
+fung_shannon_ihf <- nls(Fungi_species_shannon ~ NLS.expoDecay(ihf, a, k), data = modelos)
+
+
+par(mfrow = c(1, 1))
+  plot_nls(fung_shannon_ihf)
+  r2 <- bquote(paste("R"^2 == .(format(R2nls(fung_shannon_ihf)$PseudoR2, digits = 4))))
+  pval <- bquote(paste(bold("p-value: " == .(format(summary(fung_shannon_ihf)$coefficients[2,4], digits = 5)))))
+  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+
+  par(mfrow = c(2, 2))
+  plot(nlsResiduals(fung_shannon_ihf), which = 0)
 
 
 pdf("modelos_nao_lineares_fungos.pdf")
@@ -503,7 +327,7 @@ pdf("modelos_nao_lineares_fungos.pdf")
 dev.off()
 
 ########## Bactérias #############
-# Bacteria_species_div ~ PC1
+# Bacteria_species_div ~ qbr
 Bacteria_div_PC1 <- nls(Bacteria_species_div ~ NLS.expoDecay(qbr, a, k), data = modelos_nt)
 
 # Fungi_species_div ~ alt
@@ -523,46 +347,23 @@ fung_div_cond <- nls(Fungi_species_div ~ NLS.expoDecay(cond, a, k), data = model
 # Fungi_species_div ~ DIN
 fung_div_din <- nls(Fungi_species_div ~ NLS.lorentz.3(DIN, b, d, e), data = modelos_nt)
 fung_div_din <- nls(Fungi_species_div ~ SSgauss(DIN, mu, sigma, h), data = modelos_nt)
-plot(Fungi_species_div ~ DIN, data = modelos_nt)
-par(mfrow = c(1, 1))
-  plot_nls(fung_div_din)
-  r2 <- bquote(paste("R"^2 == .(format(R2nls(fung_div_din)$PseudoR2, digits = 4))))
-  pval <- bquote(paste(bold("p-value: " == .(format(summary(fung_div_din)$coefficients[2,4], digits = 5)))))
-  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
-  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
-
-  par(mfrow = c(2, 2))
-  plot(nlsResiduals(fung_div_din), which = 0)
 
 # Fungi_species_div ~ P.PO4
 fung_div_po4 <- nls(Fungi_species_div ~ NLS.bragg.3(P.PO4, b, d, e), data = modelos_nt)
 fung_div_po4 <- nls(Fungi_species_div ~ SSgauss(P.PO4, mu, sigma, h), data = modelos_nt)
-plot(Fungi_species_div ~ P.PO4, data = modelos_nt)
-par(mfrow = c(1, 1))
-  plot_nls(fung_div_po4)
-  r2 <- bquote(paste("R"^2 == .(format(R2nls(fung_div_po4)$PseudoR2, digits = 4))))
-  pval <- bquote(paste(bold("p-value: " == .(format(summary(fung_div_po4)$coefficients[2,4], digits = 5)))))
-  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
-  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
-
-  par(mfrow = c(2, 2))
-  plot(nlsResiduals(fung_div_po4), which = 0)
 
 # Fungi_species_div ~ Tmax
 fung_div_tmax <- nls(Fungi_species_div ~ NLS.bragg.3(Tmax, b, d, e), data = modelos_nt)
 fung_div_tmax <- nls(Fungi_species_div ~ SSgauss(Tmax, mu, sigma, h), data = modelos_nt)
 
+# Fungi_species_shannon ~ Discharge
+fungi_shannon_discharge <- nls(Fungi_species_shannon ~ NLS.expoDecay(Discharge, a, k), data = modelos_nt_retirado)
 
-par(mfrow = c(1, 1))
-  plot_nls(fung_div_tmax)
-  r2 <- bquote(paste("R"^2 == .(format(R2nls(fung_div_tmax)$PseudoR2, digits = 4))))
-  pval <- bquote(paste(bold("p-value: " == .(format(summary(fung_div_tmax)$coefficients[2,4], digits = 5)))))
-  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
-  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+# Fungi_species_shannon ~ Tmax
 
-  par(mfrow = c(2, 2))
-  plot(nlsResiduals(fung_div_tmax), which = 0)
+# Fungi_species_shannon ~ subasin
 
+# Fungi_species_shannon ~ mean.Velocity
 
 pdf("modelos_nao_lineares_bacterias.pdf")
   # Bacteria_species_div ~ PC1
@@ -655,9 +456,6 @@ residuos_expodecay <- nlsResiduals(Fung_div_qbr)
 par(mfrow = c(2, 2))
 plot(residuos_expodecay, which = 0)
 
-
-dados<- cbind("Bacteria_species_reads" = hill_shannon$Bacteria_species_reads,
-                      "Fungi_species_reads" = hill_shannon$Fungi_species_reads)
 
 pdf("modelos_lineares_hill.pdf")
 for (i in 1:length(hill_shannon)) {
