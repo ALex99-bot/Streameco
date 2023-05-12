@@ -659,23 +659,15 @@ plot(residuos_expodecay, which = 0)
 dados<- cbind("Bacteria_species_reads" = hill_shannon$Bacteria_species_reads,
                       "Fungi_species_reads" = hill_shannon$Fungi_species_reads)
 
-class(hill_shannon$Bacteria_species_reads)
-dados <- as.data.frame(dados)
-
-dados <- cbind(dados, env_data)
-class(dados)
-class(dados$mean.Velocity)
-View(dados$mean.Velocity)
-dim(dados)
-
 pdf("modelos_lineares_hill.pdf")
-for (i in colnames(hill.shannon)) {
+for (i in 1:length(hill_shannon)) {
   for(j in colnames(env_data)) {
-    dados <- as.data.frame(cbind(hill.shannon[[i]], env_data[[j]]))
+    dados <- as.data.frame(cbind(hill_shannon[[i]], env_data[[j]]))
     #print(dados)
     par(mfrow=c(1,1))
-    plot(hill.shannon[[i]] ~ env_data[[j]], data = dados, xlab = colnames(env_data[j]), ylab = colnames(hill.shannon[i]))
-    mod <- lm(hill.shannon[[i]] ~ env_data[[j]], data = dados)
+    plot(hill_shannon[[i]] ~ env_data[[j]], data = dados,
+         xlab = colnames(env_data[j]), ylab = names(hill_shannon)[i])
+    mod <- lm(hill_shannon[[i]] ~ env_data[[j]], data = dados)
     r2 <- bquote(paste(bold(R^2 == .(summary(mod)$r.squared))))
     x <- as.numeric(summary(mod)$coefficients[2,4])
     pval <- bquote(paste(bold("p-value: " == .(round(x, 4)))))
