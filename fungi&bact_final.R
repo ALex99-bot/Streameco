@@ -1,6 +1,6 @@
 # Set the directory and file name
-directory <- "/home/pedro/PycharmProjects/Streameco"
-# directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
+# directory <- "/home/pedro/PycharmProjects/Streameco"
+directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
 # directory <-"C:/Users/asus/Desktop/Streameco"
 setwd(directory)
 
@@ -66,7 +66,7 @@ env.data <- env.data[, -1]
 env_data <- as.data.frame(env.data)
 to_remove <- c("mean_light", "Artificial.500m.", "Agriculture.500m.", "Pasture.500m.", "Natural.500m.", "N.NH4", "N.NO2",
                "N.NO3", "Tmean", "Tmin", "TCV", "DOmean", "Domax", "Artificial.100m.", "Agriculture.100m.", "Pasture.100m.",
-               "Natural.100m.", "Artificial_subasin", "Agriculture_subasin", "Pasture_subasin", "Natural_subasin", "LUI_100m", "LUI_500m")
+               "Natural.100m.", "Artificial_subasin", "Agriculture_subasin", "Pasture_subasin", "Natural_subasin", "LUI_100m")
 env_data <- env_data[ , !(names(env_data) %in% to_remove)]
 env_data_nt <- env_data[ , !(names(env_data) %in% to_remove)]
 
@@ -179,65 +179,34 @@ fungi_div_alt <- nls(Fungi_species_div ~ NLS.expoGrowth(Altitude, a, k),
              data = modelos_nt)
 
 # Fungi_species_div ~ LUI_subasin
-fungi_div_subasin <- nls(Fungi_species_div ~ NLS.expoGrowth(LUI_subasin, a, k), data = modelos_nt)
+fungi_div_subasin <- nls(Fungi_species_div ~ NLS.expoGrowth(LUI_500m, a, k), data = modelos_nt)
 
 # Fungi_species_div ~ DOmin
 modelos_nt_retirado <- modelos_nt[!(row.names(modelos_nt) %in% "SEL1"),]
-fungi_div_DOmin <- nls(Fungi_species_div ~ NLS.expoGrowth(DOmin, a, k), data = modelos_nt_retirado)
+fungi_div_DOmin <- nls(Fungi_species_div ~ NLS.expoGrowth(DOmin, a, k), data = modelos_nt)
 
 # Fungi_species_div ~ cond
 fung_div_cond <- nls(Fungi_species_div ~ NLS.expoDecay(cond, a, k), data = modelos_nt)
 
-# Fungi_species_div ~ DIN
-fung_div_din <- nls(Fungi_species_div ~ NLS.lorentz.3(DIN, b, d, e), data = modelos_nt)
-fung_div_din <- nls(Fungi_species_div ~ SSgauss(DIN, mu, sigma, h), data = modelos_nt)
-plot(Fungi_species_div ~ DIN, data = modelos_nt)
-par(mfrow = c(1, 1))
-plot_nls(fung_div_din)
-r2 <- bquote(paste("R"^2 == .(format(R2nls(fung_div_din)$PseudoR2, digits = 4))))
-pval <- bquote(paste(bold("p-value: " == .(format(summary(fung_div_din)$coefficients[2,4], digits = 5)))))
-mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
-mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
-
-par(mfrow = c(2, 2))
-plot(nlsResiduals(fung_div_din), which = 0)
-
-# Fungi_species_div ~ P.PO4
-fung_div_po4 <- nls(Fungi_species_div ~ NLS.bragg.3(P.PO4, b, d, e), data = modelos_nt)
-fung_div_po4 <- nls(Fungi_species_div ~ SSgauss(P.PO4, mu, sigma, h), data = modelos_nt)
-plot(Fungi_species_div ~ P.PO4, data = modelos_nt)
-par(mfrow = c(1, 1))
-plot_nls(fung_div_po4)
-r2 <- bquote(paste("R"^2 == .(format(R2nls(fung_div_po4)$PseudoR2, digits = 4))))
-pval <- bquote(paste(bold("p-value: " == .(format(summary(fung_div_po4)$coefficients[2,4], digits = 5)))))
-mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
-mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
-
-par(mfrow = c(2, 2))
-plot(nlsResiduals(fung_div_po4), which = 0)
-
-# Fungi_species_div ~ Tmax
-fung_div_tmax <- nls(Fungi_species_div ~ NLS.bragg.3(Tmax, b, d, e), data = modelos_nt)
-fung_div_tmax <- nls(Fungi_species_div ~ SSgauss(Tmax, mu, sigma, h), data = modelos_nt)
+# Fungi_species_div ~ DIN não tem distribuição gaussiana
+#fung_div_din <- nls(Fungi_species_div ~ NLS.lorentz.3(DIN, b, d, e), data = modelos_nt)
+#fung_div_din <- nls(Fungi_species_div ~ SSgauss(DIN, mu, sigma, h), data = modelos_nt)
 
 
-par(mfrow = c(1, 1))
-plot_nls(fung_div_tmax)
-r2 <- bquote(paste("R"^2 == .(format(R2nls(fung_div_tmax)$PseudoR2, digits = 4))))
-pval <- bquote(paste(bold("p-value: " == .(format(summary(fung_div_tmax)$coefficients[2,4], digits = 5)))))
-mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
-mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+# Fungi_species_div ~ P.PO4 não tem distribuição gaussiana
+#fung_div_po4 <- nls(Fungi_species_div ~ NLS.bragg.3(P.PO4, b, d, e), data = modelos_nt)
+#fung_div_po4 <- nls(Fungi_species_div ~ SSgauss(P.PO4, mu, sigma, h), data = modelos_nt)
 
-par(mfrow = c(2, 2))
-plot(nlsResiduals(fung_div_tmax), which = 0)
+# Fungi_species_div ~ Tmax não é significativo
+# fung_div_tmax <- nls(Fungi_species_div ~ SSgauss(Tmax, mu, sigma, h), data = modelos_nt)
 
-# Fungi_species_shannon ~ ihf
-fung_shannon_ihf <- nls(Fungi_species_shannon ~ NLS.expoDecay(ihf, a, k), data = modelos)
+# Fungi_species_shannon ~ ihf não é significativo
+# fung_shannon_ihf <- nls(Fungi_species_shannon ~ NLS.expoDecay(ihf, a, k), data = modelos)
 
 
 pdf("modelos_nao_lineares_fungos.pdf")
   # Fungi_species_div ~ PC1
-  par(mfrow = c(4, 4))
+  par(mfrow = c(1, 1))
   plot_nls(Fungi_div_PC1)
   r2 <- bquote(paste("R"^2 == .(format(R2nls(Fungi_div_PC1)$PseudoR2, digits = 4))))
   pval <- bquote(paste(bold("p-value: " == .(format(summary(Fungi_div_PC1)$coefficients[2,4], digits = 5)))))
@@ -258,7 +227,7 @@ pdf("modelos_nao_lineares_fungos.pdf")
   par(mfrow = c(2, 2))
   plot(nlsResiduals(fungi_div_alt), which = 0)
 
-  # Fungi_species_div ~ LUI_subbasin
+  # Fungi_species_div ~ LUI_subasin
   par(mfrow = c(1, 1))
   plot_nls(fungi_div_subasin)
   r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_subasin)$PseudoR2, digits = 4))))
@@ -268,28 +237,6 @@ pdf("modelos_nao_lineares_fungos.pdf")
 
   par(mfrow = c(2, 2))
   plot(nlsResiduals(fungi_div_subasin), which = 0)
-
-  # Fungi_species_div ~ LUI_100m
-  par(mfrow = c(1, 1))
-  plot_nls(fungi_div_100m)
-  r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_100m)$PseudoR2, digits = 4))))
-  pval <- bquote(paste(bold("p-value: " == .(format(summary(fungi_div_100m)$coefficients[2,4], digits = 5)))))
-  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
-  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
-
-  par(mfrow = c(2, 2))
-  plot(nlsResiduals(fungi_div_100m), which = 0)
-
-  # Fungi_species_div ~ LUI_500m
-  par(mfrow = c(1, 1))
-  plot_nls(fungi_div_500m)
-  r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_500m)$PseudoR2, digits = 4))))
-  pval <- bquote(paste(bold("p-value: " == .(format(summary(fungi_div_500m)$coefficients[2,4], digits = 5)))))
-  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
-  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
-
-  par(mfrow = c(2, 2))
-  plot(nlsResiduals(fungi_div_500m), which = 0)
 
   # Fungi_species_div ~ DOmin
   par(mfrow = c(1, 1))
@@ -301,29 +248,6 @@ pdf("modelos_nao_lineares_fungos.pdf")
 
   par(mfrow = c(2, 2))
   plot(nlsResiduals(fungi_div_DOmin), which = 0)
-
-  # Fungi_species_div ~ cond
-  par(mfrow = c(1, 1))
-  plot_nls(fung_div_cond)
-  # Obtain R-squared value
-  r2 <- bquote(paste("R"^2 == .(format(R2nls(fung_div_cond)$PseudoR2, digits = 4))))
-  pval <- bquote(paste(bold("p-value: " == .(format(summary(fung_div_cond)$coefficients[2,4], digits = 5)))))
-  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
-  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
-
-  par(mfrow = c(2, 2))
-  plot(nlsResiduals(fung_div_cond), which = 0)
-
-  # Fungi_species_shannon ~ ihf
-  par(mfrow = c(1, 1))
-  plot_nls(fung_shannon_ihf)
-  r2 <- bquote(paste("R"^2 == .(format(R2nls(fung_shannon_ihf)$PseudoR2, digits = 4))))
-  pval <- bquote(paste(bold("p-value: " == .(format(summary(fung_shannon_ihf)$coefficients[2,4], digits = 5)))))
-  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
-  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
-
-  par(mfrow = c(2, 2))
-  plot(nlsResiduals(fung_shannon_ihf), which = 0)
 
 dev.off()
 
@@ -340,16 +264,19 @@ bact_div_500m <- nls(Bacteria_species_div ~ NLS.expoGrowth(LUI_500m, a, k), data
 # Bacteria_species_div ~ DOmin
 bact_div_DOmin <- nls(Bacteria_species_div ~ NLS.expoGrowth(DOmin, a, k), data = modelos)
 
-# Bacteria_species_div ~ cond
-bact_div_cond <- nls(Bacteria_species_div ~ SSgauss(cond, mu, sigma, h), data = modelos)
+# Bacteria_species_div ~ cond não segue uma distribuição gaussiana
+# bact_div_cond <- nls(Bacteria_species_div ~ SSgauss(cond, mu, sigma, h), data = modelos)
 
 # Bacteria_species_div ~ DIN
 bact_div_din <- nls(Bacteria_species_div ~ SSgauss(DIN, mu, sigma, h), data = modelos)
 
 # Bacteria_species_div ~ P.PO4
-modelos_nt_retirado <- modelos_nt[!(row.names(modelos_nt) %in% "SEL1"),]
-# bact_div_po4 <- nls(Bacteria_species_div ~ NLS.bragg.3(P.PO4, b, d, e), data = modelos)
-bact_div_po4 <- nls(Bacteria_species_div ~ SSgauss(P.PO4, mu, sigma, h), data = modelos_nt_retirado)
+# modelos_retirado <- modelos_nt[!(row.names(modelos) %in% c("LAB1", "NES1", "SAL1")),]
+# ggplot(modelos_retirado, aes(P.PO4, Bacteria_species_div)) +
+#   geom_point() +
+#   geom_text_repel(aes(label = rownames(modelos_retirado)))
+
+bact_div_po4 <- nls(Bacteria_species_div ~ SSgauss(P.PO4, mu, sigma, h), data = modelos)
 
 # Bacteria_species_div ~ Tmax
 # bact_div_tmax <- nls(Bacteria_species_div ~ NLS.bragg.3(Tmax, b, d, e), data = modelos)
@@ -364,15 +291,15 @@ bact_shannon_discharge <- nls(Bacteria_species_shannon ~ NLS.expoDecay(Discharge
 bact_shannon_tmax <- nls(Bacteria_species_shannon ~ NLS.expoDecay(Tmax, a, k), data = modelos)
 
 # Bacteria_species_shannon ~ subasin
-bact_shannon_subasin <- nls(Bacteria_species_shannon ~ SSgauss(subasin, mu, sigma, h), data = modelos)
+bact_shannon_subasin <- nls(Bacteria_species_shannon ~ SSgauss(LUI_subasin, mu, sigma, h), data = modelos)
 
 # Bacteria_species_shannon ~ mean.Velocity
-bact_shannon_tmax <- nls(Bacteria_species_shannon ~ SSgauss(Tmax, mu, sigma, h), data = modelos)
+bact_shannon_mv <- nls(Bacteria_species_shannon ~ SSgauss(mean.Velocity, mu, sigma, h), data = modelos)
 
 
 pdf("modelos_nao_lineares_bacterias.pdf")
   # Bacteria_species_div ~ qbr
-  par(mfrow = c(4, 4))
+  par(mfrow = c(1, 1))
   plot_nls(bact_div_qbr)
   r2 <- bquote(paste("R"^2 == .(format(R2nls(bact_div_qbr)$PseudoR2, digits = 4))))
   pval <- bquote(paste(bold("p-value: " == .(format(summary(bact_div_qbr)$coefficients[2,4], digits = 5)))))
@@ -384,7 +311,7 @@ pdf("modelos_nao_lineares_bacterias.pdf")
 
   # Bacteria_species_div ~ alt
   par(mfrow = c(1, 1))
-  plot_nls(bact_div_alt)
+  plot_nls(bact_div_alt, xlab = "Altitude (sqrt(m))")
   r2 <- bquote(paste("R"^2 == .(format(R2nls(bact_div_alt)$PseudoR2, digits = 4))))
   pval <- bquote(paste(bold("p-value: " == .(format(summary(bact_div_alt)$coefficients[2,4], digits = 5)))))
   mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
@@ -415,20 +342,9 @@ pdf("modelos_nao_lineares_bacterias.pdf")
   par(mfrow = c(2, 2))
   plot(nlsResiduals(bact_div_DOmin), which = 0)
 
-  # Bacteria_species_div ~ cond
-  par(mfrow = c(1, 1))
-  plot_nls(bact_div_cond)
-  r2 <- bquote(paste("R"^2 == .(format(R2nls(bact_div_cond)$PseudoR2, digits = 4))))
-  pval <- bquote(paste(bold("p-value: " == .(format(summary(bact_div_cond)$coefficients[2,4], digits = 5)))))
-  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
-  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
-
-  par(mfrow = c(2, 2))
-  plot(nlsResiduals(bact_div_cond), which = 0)
-
   # Bacteria_species_div ~ DIN
   par(mfrow = c(1, 1))
-  plot_nls(bact_div_din)
+  plot_nls(bact_div_din, xlab = "DIN sqrt")
   r2 <- bquote(paste("R"^2 == .(format(R2nls(bact_div_din)$PseudoR2, digits = 4))))
   pval <- bquote(paste(bold("p-value: " == .(format(summary(bact_div_din)$coefficients[2,4], digits = 5)))))
   mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
@@ -439,7 +355,7 @@ pdf("modelos_nao_lineares_bacterias.pdf")
 
   # Bacteria_species_div ~ P.PO4
   par(mfrow = c(1, 1))
-  plot_nls(bact_div_po4)
+  plot_nls(bact_div_po4, xlab = "P.PO4 sqrt")
   # Obtain R-squared value
   r2 <- bquote(paste("R"^2 == .(format(R2nls(bact_div_po4)$PseudoR2, digits = 4))))
   pval <- bquote(paste(bold("p-value: " == .(format(summary(bact_div_po4)$coefficients[2,4], digits = 5)))))
@@ -463,7 +379,7 @@ pdf("modelos_nao_lineares_bacterias.pdf")
 
   # Bacteria_species_shannon ~ Discharge
   par(mfrow = c(1, 1))
-  plot_nls(bact_shannon_discharge)
+  plot_nls(bact_shannon_discharge, xlab = "Discharge log")
   # Obtain R-squared value
   r2 <- bquote(paste("R"^2 == .(format(R2nls(bact_shannon_discharge)$PseudoR2, digits = 4))))
   pval <- bquote(paste(bold("p-value: " == .(format(summary(bact_shannon_discharge)$coefficients[2,4], digits = 5)))))
@@ -497,33 +413,19 @@ pdf("modelos_nao_lineares_bacterias.pdf")
   par(mfrow = c(2, 2))
   plot(nlsResiduals(bact_shannon_subasin), which = 0)
 
-
   # Bacteria_species_shannon ~ mean.Velocity
   par(mfrow = c(1, 1))
-  plot_nls(bact_shannon_tmax)
+  plot_nls(bact_shannon_mv, xlab = " Mean velocity sqrt")
   # Obtain R-squared value
-  r2 <- bquote(paste("R"^2 == .(format(R2nls(bact_shannon_tmax)$PseudoR2, digits = 4))))
-  pval <- bquote(paste(bold("p-value: " == .(format(summary(bact_shannon_tmax)$coefficients[2,4], digits = 5)))))
+  r2 <- bquote(paste("R"^2 == .(format(R2nls(bact_shannon_mv)$PseudoR2, digits = 4))))
+  pval <- bquote(paste(bold("p-value: " == .(format(summary(bact_shannon_mv)$coefficients[2,4], digits = 5)))))
   mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
   mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
 
   par(mfrow = c(2, 2))
   plot(nlsResiduals(bact_shannon_tmax), which = 0)
 
-
-
 dev.off()
-
-# nls fit
-Fung_div_qbr <- nls(Fungi_species_div ~ NLS.expoGrowth(qbr, a, k),
-             data = modelos_nt)
-summary(Fung_div_qbr)
-plot_nls(Fung_div_qbr)
-R2nls(Fung_div_qbr)$PseudoR2
-residuos_expodecay <- nlsResiduals(Fung_div_qbr)
-par(mfrow = c(2, 2))
-plot(residuos_expodecay, which = 0)
-
 
 pdf("modelos_lineares_hill.pdf")
 for (i in 1:length(hill_shannon)) {
