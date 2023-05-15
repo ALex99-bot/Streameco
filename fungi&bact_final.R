@@ -192,7 +192,6 @@ fung_div_cond <- nls(Fungi_species_div ~ NLS.expoDecay(cond, a, k), data = model
 #fung_div_din <- nls(Fungi_species_div ~ NLS.lorentz.3(DIN, b, d, e), data = modelos_nt)
 #fung_div_din <- nls(Fungi_species_div ~ SSgauss(DIN, mu, sigma, h), data = modelos_nt)
 
-
 # Fungi_species_div ~ P.PO4 não tem distribuição gaussiana
 #fung_div_po4 <- nls(Fungi_species_div ~ NLS.bragg.3(P.PO4, b, d, e), data = modelos_nt)
 #fung_div_po4 <- nls(Fungi_species_div ~ SSgauss(P.PO4, mu, sigma, h), data = modelos_nt)
