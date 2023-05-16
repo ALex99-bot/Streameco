@@ -293,8 +293,24 @@ bact_shannon_tmax <- nls(Bacteria_species_shannon ~ NLS.expoDecay(Tmax, a, k), d
 bact_shannon_subasin <- nls(Bacteria_species_shannon ~ SSgauss(LUI_subasin, mu, sigma, h), data = modelos)
 
 # Bacteria_species_shannon ~ mean.Velocity
-bact_shannon_mv <- nls(Bacteria_species_shannon ~ SSgauss(mean.Velocity, mu, sigma, h), data = modelos)
+modelos_retirado <- modelos_nt[!(row.names(modelos) %in% c("CBR1", "TAve2")),]
 
+bact_shannon_mv <- nls(Bacteria_species_shannon ~ SSgauss(mean.Velocity, mu, sigma, h), data = modelos_retirado)
+
+modelos_retirado |>
+  ggplot(aes(mean.Velocity, Bacteria_species_shannon)) +
+  geom_point() +
+  geom_text_repel(aes(label = rownames(modelos_retirado)))
+
+par(mfrow = c(1, 1))
+plot_nls(bact_shannon_mv)
+r2 <- bquote(paste("R"^2 == .(format(R2nls(bact_shannon_mv)$PseudoR2, digits = 4))))
+pval <- bquote(paste(bold("p-value: " == .(format(summary(bact_shannon_mv)$coefficients[2,4], digits = 5)))))
+mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+
+par(mfrow = c(2, 2))
+plot(nlsResiduals(bact_shannon_mv), which = 0)
 
 pdf("modelos_nao_lineares_bacterias.pdf")
   # Bacteria_species_div ~ qbr
