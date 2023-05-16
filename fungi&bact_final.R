@@ -183,7 +183,7 @@ fungi_div_subasin <- nls(Fungi_species_div ~ NLS.expoGrowth(LUI_500m, a, k), dat
 
 # Fungi_species_div ~ DOmin
 modelos_nt_retirado <- modelos_nt[!(row.names(modelos_nt) %in% "SEL1"),]
-fungi_div_DOmin <- nls(Fungi_species_div ~ NLS.expoGrowth(DOmin, a, k), data = modelos_nt)
+fungi_div_DOmin <- nls(Fungi_species_div ~ NLS.expoGrowth(DOmin, a, k), data = modelos_nt_retirado)
 
 # Fungi_species_div ~ cond
 fung_div_cond <- nls(Fungi_species_div ~ NLS.expoDecay(cond, a, k), data = modelos_nt)
