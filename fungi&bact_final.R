@@ -1,6 +1,6 @@
 # Set the directory and file name
-directory <- "/home/pedro/PycharmProjects/Streameco"
-# directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
+# directory <- "/home/pedro/PycharmProjects/Streameco"
+directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
 # directory <-"C:/Users/asus/Desktop/Streameco"
 setwd(directory)
 
@@ -125,12 +125,9 @@ var_exp <- (PCA_env$eig*100)/sum(PCA_env$eig)
 env_data <- cbind(env_data, PC1 = PCA_env$li[,1])
 env_data_nt <- cbind(env_data_nt, PC1 = PCA_env$li[,1])
 
-df <- lapply(diversidade, function(x) as.data.frame())
-df <- bind_rows(diversidade)
-df <- cbind(diversidade, shannon_index, hill_shannon, pielou_index, margalef_index, simpson_index)
-transform(merge(df1,df2, by=0, all=TRUE), row.names=Row.names, Row.names=NULL)
-typeof(diversidade[[1]])
-data.frame(diversidade[[1]])
+names(diversidade) <- lapply(names(diversidade), function(df) sapply(df, gsub, pattern="reads", replacement="div"))
+df_div <- as.data.frame(diversidade)
+
 
 indices <- read_excel("bioindices.xlsx")
 indices <- as.data.frame(indices)
