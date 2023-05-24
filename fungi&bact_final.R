@@ -1,6 +1,6 @@
 # Set the directory and file name
-# directory <- "/home/pedro/PycharmProjects/Streameco"
-directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
+directory <- "/home/pedro/PycharmProjects/Streameco"
+# directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
 # directory <-"C:/Users/asus/Desktop/Streameco"
 setwd(directory)
 
@@ -13,21 +13,17 @@ path2 <- file.path(directory, file2)
 path3 <- file.path(directory, file3)
 path4 <- file.path(directory, file4)
 
-
 # Load the required packages
 library(readxl)
 library(mgcv)
 library(ade4)
 library(usdm)
 library(vegan)
-library(purrr)
-library(ggplot2)
 library(ggrepel)
 library(factoextra)
 library(readxl)
 library(abdiv)
 library(plyr)
-library(dplyr)
 library(ggpmisc)
 library(aomisc)
 library(nlstools)
@@ -35,6 +31,7 @@ library(nlshelper)
 library(xcms)
 library(hillR)
 library(nlraa)
+library(tidyverse)
 
 
 read_excel_sheets <- function(path, file){
@@ -52,6 +49,10 @@ excel2dataframe <- function(x) {
 }
 
 bact_fung_taxa <- lapply(read_excel_sheets(path, file), excel2dataframe)
+# Valores normalizados
+bact_fung_taxa_norm <- lapply(bact_fung_taxa, function(x) apply(x, 2, function(y) y/sum(y)))
+# Número de indivíduos presentes
+bact_fung_taxa_unicas <- lapply(bact_fung_taxa, function(x) sapply(x, function(y) length(which(y != 0))))
 
 # Variáveis ambientais
 bacias <- read_excel("STREAMECO database - environment (copy).xlsx", "LandUse")
@@ -92,16 +93,16 @@ env_data$Discharge <- log(env_data$Discharge+0.0001)
 # indices <- Reduce(function(df1, df2) cbind(df1, df2), shannon, init = matriz_final)
 # indices <- indices[,-1:-31]
 
-diversidade <- lapply(bact_fung_taxa, function(x) specnumber(t(x)))
+diversidade <- lapply(bact_fung_taxa_norm, function(x) specnumber(t(x)))
 
-shannon_index <- lapply(bact_fung_taxa, function(x) diversity(t(x), index = "shannon", base = exp(1)))
-hill_shannon <- lapply(bact_fung_taxa, function(x) hill_taxa(t(x), q = 1, MARGIN = 1, base = exp(1)))
+shannon_index <- lapply(bact_fung_taxa_norm, function(x) diversity(t(x), index = "shannon", base = exp(1)))
+hill_shannon <- lapply(bact_fung_taxa_norm, function(x) hill_taxa(t(x), q = 1, MARGIN = 1, base = exp(1)))
 
-pielou_index <- lapply(bact_fung_taxa, function(x) diversity(t(x))/log(specnumber(t(x))))
+pielou_index <- lapply(bact_fung_taxa_norm, function(x) diversity(t(x))/log(specnumber(t(x))))
 
-margalef_index <- lapply(bact_fung_taxa, function(x) apply(x, 2, margalef))
+margalef_index <- lapply(bact_fung_taxa_norm, function(x) apply(x, 2, margalef))
 
-simpson_index <- lapply(bact_fung_taxa, function(x) diversity(t(x), index = "simpson", MARGIN = 1, base = exp(1)))
+simpson_index <- lapply(bact_fung_taxa_norm, function(x) diversity(t(x), index = "simpson", MARGIN = 1, base = exp(1)))
 
 # Está mal, é preciso corrigir
 # bray_index <- lapply(bact_fung_taxa, function(x) {pco <- dudi.pco(vegdist(t(x), method = "bray"), scannf = F, nf = 10)
@@ -123,6 +124,13 @@ var_exp <- (PCA_env$eig*100)/sum(PCA_env$eig)
 
 env_data <- cbind(env_data, PC1 = PCA_env$li[,1])
 env_data_nt <- cbind(env_data_nt, PC1 = PCA_env$li[,1])
+
+df <- lapply(diversidade, function(x) as.data.frame())
+df <- bind_rows(diversidade)
+df <- cbind(diversidade, shannon_index, hill_shannon, pielou_index, margalef_index, simpson_index)
+transform(merge(df1,df2, by=0, all=TRUE), row.names=Row.names, Row.names=NULL)
+typeof(diversidade[[1]])
+data.frame(diversidade[[1]])
 
 indices <- read_excel("bioindices.xlsx")
 indices <- as.data.frame(indices)
@@ -156,17 +164,6 @@ modelos <- cbind(modelos, vel = modelos$mean.Velocity)
 
 modelos_nt <- as.data.frame(cbind(indices2, env_data_nt))
 modelos_nt <- cbind(modelos_nt, vel = modelos_nt$mean.Velocity)
-
-# jpeg("bact_shannon_velocidade.jpg")
-par(mfrow=c(1,1))
-plot(Fungi_species_div ~ cond, data = modelos_nt)
-r2 <- bquote(paste(bold(R^2 == .(11.6))))
-mtext("p<0.01", line=-1.5, adj = 1, cex = 1.2, font = 2)
-mtext(r2, line=-2.5, adj = 1, cex = 1.2, font = 2)
-mod <- lm(Fungi_species_div ~ Altitude, data = modelos_nt)
-abline(mod)
-# dev.off()
-summary(mod)
 
 # modelos_nt2 <- modelos_nt[!(row.names(modelos_nt) %in% "ROD1"),]
 
@@ -443,7 +440,7 @@ pdf("modelos_nao_lineares_bacterias.pdf")
 dev.off()
 
 pdf("modelos_lineares_hill.pdf")
-for (i in 1:length(hill_shannon)) {
+for (i in seq_along(hill_shannon)) {
   for(j in colnames(env_data)) {
     dados <- as.data.frame(cbind(hill_shannon[[i]], env_data[[j]]))
     #print(dados)
@@ -462,5 +459,3 @@ for (i in 1:length(hill_shannon)) {
   }
 }
 dev.off()
-
-
