@@ -125,16 +125,40 @@ var_exp <- (PCA_env$eig*100)/sum(PCA_env$eig)
 env_data <- cbind(env_data, PC1 = PCA_env$li[,1])
 env_data_nt <- cbind(env_data_nt, PC1 = PCA_env$li[,1])
 
-names(diversidade) <- lapply(names(diversidade), function(df) sapply(df, gsub, pattern="reads", replacement="div"))
-df_div <- as.data.frame(diversidade)
+all_lists <- list(
+  diversidade = diversidade,
+  hill_shannon = hill_shannon,
+  shannon_index = shannon_index,
+  pielou_index = pielou_index,
+  margalef_index = margalef_index,
+  simpson_index = simpson_index
+)
 
+# indices <- setNames(
+#   lapply(names(all_lists), function(list_name) {
+#     lista <- all_lists[[list_name]]
+#     repla <- gsub("_?index$", "", list_name)
+#     names(lista) <- lapply(names(lista), function(df) gsub("reads", repla, df))
+#     as.data.frame(lista)
+#   }),
+#   names(all_lists)
+# )
 
-indices <- read_excel("bioindices.xlsx")
-indices <- as.data.frame(indices)
-row.names(indices) <- indices$local
-indices <- indices[, -1]
+indices <- lapply(names(all_lists), function(list_name) {
+  lista <- all_lists[[list_name]]
+  repla <- gsub("_?index$", "", list_name)
+  names(lista) <- lapply(names(lista), function(df) gsub("reads", repla, df))
+  as.data.frame(lista)
+})
 
-indices <- as.data.frame(indices)
+indices <- as.data.frame(do.call(cbind, indices))
+
+# indices <- read_excel("bioindices.xlsx")
+# indices <- as.data.frame(indices)
+# row.names(indices) <- indices$local
+# indices <- indices[, -1]
+# indices <- as.data.frame(indices)
+
 env_data_nt <- as.data.frame(env_data_nt)
 env_data <- as.data.frame(env_data)
 
