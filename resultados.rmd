@@ -104,26 +104,26 @@ env_data$Discharge <- log(env_data$Discharge+0.0001)
 
 ```{r}
 # Índices
-diversidade <- lapply(bact_fung_taxa[-c(1, 5, 6, 7, 10, 11)], function(x) specnumber(t(x)))
+diversidade <- lapply(bact_fung_taxa[-c(2, 5, 6, 8, 11, 12)], function(x) specnumber(t(x)))
 
-shannon_index <- lapply(bact_fung_taxa[-c(1, 5, 6, 7, 10, 11)], function(x) diversity(t(x), index = "shannon", base = exp(1)))
-hill_shannon <- lapply(bact_fung_taxa[-c(1, 5, 6, 7, 10, 11)], function(x) hill_taxa(t(x), q = 1, MARGIN = 1, base = exp(1)))
+shannon_index <- lapply(bact_fung_taxa[-c(2, 5, 6, 8, 11, 12)], function(x) diversity(t(x), index = "shannon", base = exp(1)))
+hill_shannon <- lapply(bact_fung_taxa[-c(2, 5, 6, 8, 11, 12)], function(x) hill_taxa(t(x), q = 1, MARGIN = 1, base = exp(1)))
 
-pielou_index <- lapply(bact_fung_taxa[-c(1, 5, 6, 7, 10, 11)], function(x) diversity(t(x))/log(specnumber(t(x))))
+pielou_index <- lapply(bact_fung_taxa[-c(2, 5, 6, 8, 11, 12)], function(x) diversity(t(x))/log(specnumber(t(x))))
 
-margalef_index <- lapply(bact_fung_taxa[-c(1, 5, 6, 7, 10, 11)], function(x) apply(x, 2, margalef))
+margalef_index <- lapply(bact_fung_taxa[-c(2, 5, 6, 8, 11, 12)], function(x) apply(x, 2, margalef))
 
-simpson_index <- lapply(bact_fung_taxa[-c(1, 5, 6, 7, 10, 11)], function(x) diversity(t(x), index = "simpson", MARGIN = 1, base = exp(1)))
+simpson_index <- lapply(bact_fung_taxa[-c(2, 5, 6, 8, 11, 12)], function(x) diversity(t(x), index = "simpson", MARGIN = 1, base = exp(1)))
 
 # Índices 10 menos representados
-shannon_index_less10 <- lapply(bact_fung_taxa_less10[-c(1, 5, 6, 7, 10, 11)], function(x) diversity(t(x), index = "shannon", base = exp(1)))
-hill_shannon_less10 <- lapply(bact_fung_taxa_less10[-c(1, 5, 6, 7, 10, 11)], function(x) hill_taxa(t(x), q = 1, MARGIN = 1, base = exp(1)))
+shannon_index_less10 <- lapply(bact_fung_taxa_less10[-c(2, 5, 6, 8, 11, 12)], function(x) diversity(t(x), index = "shannon", base = exp(1)))
+hill_shannon_less10 <- lapply(bact_fung_taxa_less10[-c(2, 5, 6, 8, 11, 12)], function(x) hill_taxa(t(x), q = 1, MARGIN = 1, base = exp(1)))
 
-pielou_index_less10 <- lapply(bact_fung_taxa_less10[-c(1, 5, 6, 7, 10, 11)], function(x) diversity(t(x))/log(specnumber(t(x))))
+pielou_index_less10 <- lapply(bact_fung_taxa_less10[-c(2, 5, 6, 8, 11, 12)], function(x) diversity(t(x))/log(specnumber(t(x))))
 
-margalef_index_less10 <- lapply(bact_fung_taxa_less10[-c(1, 5, 6, 7, 10, 11)], function(x) apply(x, 2, margalef))
+margalef_index_less10 <- lapply(bact_fung_taxa_less10[-c(2, 5, 6, 8, 11, 12)], function(x) apply(x, 2, margalef))
 
-simpson_index_less10 <- lapply(bact_fung_taxa_less10[-c(1, 5, 6, 7, 10, 11)], function(x) diversity(t(x), index = "simpson", MARGIN = 1, base = exp(1)))
+simpson_index_less10 <- lapply(bact_fung_taxa_less10[-c(2, 5, 6, 8, 11, 12)], function(x) diversity(t(x), index = "simpson", MARGIN = 1, base = exp(1)))
 ```
 
 
@@ -166,7 +166,11 @@ env_data_nt <- as.data.frame(env_data_nt)
 env_data_normal <- as.data.frame(env_data_normal)
 
 indices2 <- indices[,c("Bacteria_species_diversidade","Bacteria_species_shannon",
-           "Fungi_species_diversidade", "Fungi_species_shannon")]
+          "Fungi_species_diversidade", "Fungi_species_shannon",
+          "Bacteria_genus_diversidade","Bacteria_genus_shannon",
+          "Fungi_genus_diversidade", "Fungi_genus_shannon",
+          "Bacteria_family_diversidade","Bacteria_family_shannon",
+          "Fungi_family_diversidade", "Fungi_family_shannon")]
 
 modelos <- as.data.frame(cbind(indices2, env_data_normal))
 modelos <- cbind(modelos, vel = modelos$mean.Velocity)
@@ -188,8 +192,10 @@ all_lists_less10 <- list(
 
 indices_less10 <- lapply(names(all_lists_less10), function(list_name) {
   lista <- all_lists_less10[[list_name]]
-  repla <- gsub("_?index$", "", list_name)
-  names(lista) <- lapply(names(lista), function(df) gsub("reads", repla, df))
+  repla <- gsub("_index_", "_", list_name) # Remove "_index_" from list_name
+  names(lista) <- lapply(names(lista), function(df) {
+    gsub("reads", repla, df) # Replace "reads" with the modified list_name
+  })
   as.data.frame(lista)
 })
 
@@ -198,7 +204,9 @@ indices_less10 <- as.data.frame(do.call(cbind, indices_less10))
 env_data_nt <- as.data.frame(env_data_nt)
 env_data_normal <- as.data.frame(env_data_normal)
 
-indices2_less10 <- indices_less10[,c("Fungi_species_diversidade_less10", "Fungi_species_shannon_less10")]
+indices2_less10 <- indices_less10[,c("Bacteria_species_shannon_less10", "Fungi_species_shannon_less10",
+          "Bacteria_genus_shannon_less10", "Fungi_genus_shannon_less10",
+          "Bacteria_family_shannon_less10", "Fungi_family_shannon_less10")]
 
 modelos_less10 <- as.data.frame(cbind(indices2_less10, env_data_normal))
 modelos_less10 <- cbind(modelos_less10, vel = modelos_less10$mean.Velocity)
@@ -489,6 +497,23 @@ pdf("modelos_nao_lineares_bacterias.pdf")
 
 dev.off()
 ```
+
+
+```{r}
+pdf("modelos_bacterias_fungos.pdf")
+for (i in colnames(indices2)) {
+  for(j in colnames(env_data)) {
+    dados <- as.data.frame(cbind(indices2[[i]], env_data[[j]]))
+    #print(dados)
+    par(mfrow=c(1,1))
+    plot(indices2[[i]] ~ env_data[[j]], data = dados,
+         xlab = colnames(env_data[j]), ylab = colnames(indices2[i]))
+  }
+}
+dev.off()
+
+```
+
 
 
 ```{r}
