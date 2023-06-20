@@ -6,8 +6,8 @@ output: html_document
 
 ```{r}
 # Set the directory and file name
-directory <- "/home/pedro/PycharmProjects/Streameco"
-# directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
+# directory <- "/home/pedro/PycharmProjects/Streameco"
+directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
 # directory <-"C:/Users/asus/Desktop/Streameco"
 setwd(directory)
 
@@ -222,18 +222,35 @@ modelos_nt_less10 <- cbind(modelos_nt_less10, vel = modelos_nt_less10$mean.Veloc
 ```{r}
 ########## Fungos #############
 # Fungi_species_div ~ PC1
-Fungi_div_PC1 <- nls(Fungi_species_diversidade ~ NLS.expoDecay(PC1, a, k), data = modelos_nt)
+Fungi_div_PC1 <- nls(Fungi_species_diversidade ~ NLS.expoDecay(PC1, a, k), data = modelos)
 
 # Fungi_species_div ~ alt
 fungi_div_alt <- nls(Fungi_species_diversidade ~ NLS.expoGrowth(Altitude, a, k),
-             data = modelos_nt)
+              data = modelos)
 
-# Fungi_species_div ~ LUI_subasin
-fungi_div_subasin <- nls(Fungi_species_diversidade ~ NLS.expoGrowth(LUI_500m, a, k), data = modelos_nt)
+# Fungi_species_div ~ LUI_500m
+modelos_retirado <- modelos[!(row.names(modelos) %in% "CasM1"),]
+ggplot(modelos_retirado, aes(LUI_500m, Fungi_species_diversidade)) +
+  geom_point() +
+  geom_text_repel(aes(label = rownames(modelos_retirado)))
+
+fungi_div_500m <- nls(Fungi_species_diversidade ~ NLS.expoGrowth(LUI_500m, a, k), data = modelos_retirado)
+
+par(mfrow = c(1, 1))
+plot_nls(fungi_div_500m)
+r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_500m)$PseudoR2, digits = 4))))
+pval <- bquote(paste(bold("p-value: " == .(format(summary(fungi_div_500m)$coefficients[2,4], digits = 5)))))
+mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+
+par(mfrow = c(2, 2))
+plot(nlsResiduals(fungi_div_500m), which = 0)
+
+
 
 # Fungi_species_div ~ DOmin
 # modelos_nt_retirado <- modelos_nt[!(row.names(modelos_nt) %in% "SEL1"),]
-fungi_div_DOmin <- nls(Fungi_species_diversidade ~ NLS.expoGrowth(DOmin, a, k), data = modelos_nt)
+# fungi_div_DOmin <- nls(Fungi_species_diversidade ~ NLS.expoGrowth(DOmin, a, k), data = modelos_nt)
 
 # Fungi_species_div ~ cond
 fung_div_cond <- nls(Fungi_species_diversidade ~ NLS.expoDecay(cond, a, k), data = modelos_nt)
@@ -255,49 +272,49 @@ fung_div_cond <- nls(Fungi_species_diversidade ~ NLS.expoDecay(cond, a, k), data
 
 pdf("modelos_nao_lineares_fungos.pdf")
   # Fungi_species_div ~ PC1
-  par(mfrow = c(1, 1))
+  par(mfrow = c(2, 2))
   plot_nls(Fungi_div_PC1)
   r2 <- bquote(paste("R"^2 == .(format(R2nls(Fungi_div_PC1)$PseudoR2, digits = 4))))
   pval <- bquote(paste(bold("p-value: " == .(format(summary(Fungi_div_PC1)$coefficients[2,4], digits = 5)))))
   mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
   mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
 
-  par(mfrow = c(2, 2))
-  plot(nlsResiduals(Fungi_div_PC1), which = 0)
+  # par(mfrow = c(2, 2))
+  # plot(nlsResiduals(Fungi_div_PC1), which = 0)
 
 
   # Fungi_species_div ~ alt
-  par(mfrow = c(1, 1))
+  # par(mfrow = c(1, 1))
   plot_nls(fungi_div_alt)
   r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_alt)$PseudoR2, digits = 4))))
   pval <- bquote(paste(bold("p-value: " == .(format(summary(fungi_div_alt)$coefficients[2,4], digits = 5)))))
   mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
   mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
 
-  par(mfrow = c(2, 2))
-  plot(nlsResiduals(fungi_div_alt), which = 0)
+  # par(mfrow = c(2, 2))
+  # plot(nlsResiduals(fungi_div_alt), which = 0)
 
-  # Fungi_species_div ~ LUI_subasin
-  par(mfrow = c(1, 1))
+  # Fungi_species_div ~ LUI_500m
+  # par(mfrow = c(1, 1))
   plot_nls(fungi_div_subasin)
   r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_subasin)$PseudoR2, digits = 4))))
   pval <- bquote(paste(bold("p-value: " == .(format(summary(fungi_div_subasin)$coefficients[2,4], digits = 5)))))
   mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
   mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
 
-  par(mfrow = c(2, 2))
-  plot(nlsResiduals(fungi_div_subasin), which = 0)
+  # par(mfrow = c(2, 2))
+  # plot(nlsResiduals(fungi_div_subasin), which = 0)
 
-  # Fungi_species_div ~ DOmin
-  par(mfrow = c(1, 2))
-  plot_nls(fungi_div_DOmin)
-  r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_DOmin)$PseudoR2, digits = 4))))
-  pval <- bquote(paste(bold("p-value: " == .(format(summary(fungi_div_DOmin)$coefficients[2,4], digits = 5)))))
+  # Fungi_species_div ~ cond
+  # par(mfrow = c(1, 2))
+  plot_nls(fung_div_cond)
+  r2 <- bquote(paste("R"^2 == .(format(R2nls(fung_div_cond)$PseudoR2, digits = 4))))
+  pval <- bquote(paste(bold("p-value: " == .(format(summary(fung_div_cond)$coefficients[2,4], digits = 5)))))
   mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
   mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
 
-  par(mfrow = c(2, 2))
-  plot(nlsResiduals(fungi_div_DOmin), which = 0)
+  # par(mfrow = c(2, 2))
+  # plot(nlsResiduals(fung_div_cond), which = 0)
 
 dev.off()
 ```

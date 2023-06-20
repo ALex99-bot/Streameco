@@ -1,6 +1,6 @@
 # Set the directory and file name
-directory <- "/home/pedro/PycharmProjects/Streameco"
-# directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
+# directory <- "/home/pedro/PycharmProjects/Streameco"
+directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
 # directory <-"C:/Users/asus/Desktop/Streameco"
 setwd(directory)
 
@@ -48,7 +48,7 @@ excel2dataframe <- function(x) {
   x <- x[, -1]
 }
 
-bact_fung_taxa <- lapply(read_excel_sheets(path4, file4), excel2dataframe)
+bact_fung_taxa <- lapply(read_excel_sheets(path, file), excel2dataframe)
 # Valores normalizados
 # bact_fung_taxa_norm <- lapply(bact_fung_taxa, function(x) apply(x, 2, function(y) y/sum(y)))
 # Número de indivíduos presentes
@@ -87,7 +87,7 @@ env_data$Discharge <- log(env_data$Discharge+0.0001)
 # wilcox.test(sqrt(env_data$LUI_100m))
 
 # Apenas para hyphomycetes
-env_data <- env_data[-40,]
+# env_data <- env_data[-40,]
 
 # matriz_final <- Reduce(function(df1, df2) cbind(df1, df2), shannon, init = env.data)
 # indices <- Reduce(function(df1, df2) cbind(df1, df2), shannon, init = matriz_final)
@@ -196,9 +196,22 @@ Fungi_div_PC1 <- nls(Fungi_species_diversidade ~ NLS.expoDecay(PC1, a, k), data 
 fungi_div_alt <- nls(Fungi_species_diversidade ~ NLS.expoGrowth(Altitude, a, k),
              data = modelos_nt)
 
-# Fungi_species_div ~ LUI_subasin
-fungi_div_subasin <- nls(Fungi_species_diversidade ~ NLS.expoGrowth(LUI_500m, a, k), data = modelos_nt)
+# Fungi_species_div ~ LUI_500m
+modelos_retirado <- modelos[!(row.names(modelos) %in% c("ROD1", "SOU1")),]
+ggplot(modelos_retirado, aes(LUI_500m, Fungi_species_diversidade)) +
+  geom_point() +
+  geom_text_repel(aes(label = rownames(modelos_retirado)))
 
+fungi_div_500m <- nls(Fungi_species_diversidade ~ NLS.expoGrowth(LUI_500m, a, k), data = modelos_retirado)
+
+par(mfrow = c(1, 1))
+plot_nls(fungi_div_500m)
+r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_500m)$PseudoR2, digits = 4))))
+pval <- bquote(paste(bold("p-value: " == .(format(summary(fungi_div_500m)$coefficients[2,4], digits = 5)))))
+mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+par(mfrow = c(2, 2))
+plot(nlsResiduals(fungi_div_500m), which = 0)
 # Fungi_species_div ~ DOmin
 # modelos_nt_retirado <- modelos_nt[!(row.names(modelos_nt) %in% "SEL1"),]
 fungi_div_DOmin <- nls(Fungi_species_diversidade ~ NLS.expoGrowth(DOmin, a, k), data = modelos_nt)
