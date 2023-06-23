@@ -1,5 +1,5 @@
-directory <- "/home/pedro/PycharmProjects/Streameco"
-# directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
+# directory <- "/home/pedro/PycharmProjects/Streameco"
+directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
 # directory <-"C:/Users/asus/Desktop/Streameco"
 setwd(directory)
 
@@ -94,16 +94,15 @@ margalef_index <- lapply(bact_fung_taxa[-c(2, 5, 6, 8, 11, 12)], function(x) app
 
 simpson_index <- lapply(bact_fung_taxa[-c(2, 5, 6, 8, 11, 12)], function(x) diversity(t(x), index = "simpson", MARGIN = 1, base = exp(1)))
 
-env_data_normal <- env_data
 
-PCA_env <- dudi.pca(env_data_normal, center = TRUE, scale = TRUE, nf=5, scannf = FALSE)
+PCA_env <- dudi.pca(env_data, center = TRUE, scale = TRUE, nf=5, scannf = FALSE)
 
 # PCA_env <- rep(list(dudi.pca(env_data, center = TRUE, scale = TRUE, nf=5, scannf = FALSE)), times = 12)
 biplot(PCA_env)
 s.arrow(PCA_env$c1, lab=names(PCA_env$tab))
 var_exp <- (PCA_env$eig*100)/sum(PCA_env$eig)
 
-env_data <- cbind(env_data_normal, PC1 = PCA_env$li[,1])
+env_data <- cbind(env_data, PC1 = PCA_env$li[,1])
 env_data_nt <- cbind(env_data_nt, PC1 = PCA_env$li[,1])
 
 all_lists <- list(
@@ -126,7 +125,7 @@ indices <- lapply(names(all_lists), function(list_name) {
 indices <- as.data.frame(do.call(cbind, indices))
 
 env_data_nt <- as.data.frame(env_data_nt)
-env_data_normal <- as.data.frame(env_data_normal)
+env_data <- as.data.frame(env_data)
 
 indices2 <- indices[,c("Bacteria_species_diversidade","Bacteria_species_shannon",
           "Fungi_species_diversidade", "Fungi_species_shannon",
@@ -135,7 +134,7 @@ indices2 <- indices[,c("Bacteria_species_diversidade","Bacteria_species_shannon"
           "Bacteria_family_diversidade","Bacteria_family_shannon",
           "Fungi_family_diversidade", "Fungi_family_shannon")]
 
-modelos <- as.data.frame(cbind(indices2, env_data_normal))
+modelos <- as.data.frame(cbind(indices2, env_data))
 modelos <- cbind(modelos, vel = modelos$mean.Velocity)
 
 modelos_nt <- as.data.frame(cbind(indices2, env_data_nt))
@@ -156,7 +155,7 @@ fungi_div_500m <- nls(Fungi_species_diversidade ~ NLS.expoDecay(LUI_500m, a, k),
 fung_div_cond <- nls(Fungi_species_diversidade ~ NLS.expoDecay(cond, a, k), data = modelos_nt)
 
 
-pdf("modelos_nao_lineares_fungos.pdf")
+png("modelos_nao_lineares_fungos.png")
   # Fungi_species_div ~ PC1
   par(mfrow = c(2, 2))
   plot_nls(Fungi_div_PC1, ylab = "S")
@@ -231,7 +230,7 @@ mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
 par(mfrow = c(2, 2))
 plot(nlsResiduals(bact_shannon_mv), which = 0)
 
-pdf("modelos_nao_lineares_bacterias.pdf")
+png("modelos_nao_lineares_bacterias_retirado.png")
   # Bacteria_species_shannon ~ mean.Velocity
   par(mfrow = c(1, 1))
   plot_nls(bact_shannon_mv, xlab = " Mean velocity sqrt", ylab = "H'")
@@ -241,8 +240,8 @@ pdf("modelos_nao_lineares_bacterias.pdf")
   mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
   mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
 
-  par(mfrow = c(2, 2))
-  plot(nlsResiduals(bact_shannon_mv), which = 0)
+  #par(mfrow = c(2, 2))
+  #plot(nlsResiduals(bact_shannon_mv), which = 0)
 
 dev.off()
 
