@@ -6,8 +6,8 @@ output: html_document
 
 ```{r}
 # Set the directory and file name
-# directory <- "/home/pedro/PycharmProjects/Streameco"
-directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
+directory <- "/home/pedro/PycharmProjects/Streameco"
+# directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
 # directory <-"C:/Users/asus/Desktop/Streameco"
 setwd(directory)
 
@@ -81,7 +81,7 @@ env.data <- env.data[, -1]
 env_data <- as.data.frame(env.data)
 to_remove <- c("mean_light", "Artificial.500m.", "Agriculture.500m.", "Pasture.500m.", "Natural.500m.", "N.NH4", "N.NO2",
                "N.NO3", "Tmean", "Tmin", "TCV", "DOmean", "Domax", "Artificial.100m.", "Agriculture.100m.", "Pasture.100m.",
-               "Natural.100m.", "Artificial_subasin", "Agriculture_subasin", "Pasture_subasin", "Natural_subasin", "LUI_100m")
+               "Natural.100m.", "Artificial_subasin", "Agriculture_subasin", "Pasture_subasin", "Natural_subasin", "LUI_100m", "LUI_subasin")
 env_data <- env_data[ , !(names(env_data) %in% to_remove)]
 env_data_nt <- env_data[ , !(names(env_data) %in% to_remove)]
 
@@ -116,14 +116,14 @@ margalef_index <- lapply(bact_fung_taxa[-c(2, 5, 6, 8, 11, 12)], function(x) app
 simpson_index <- lapply(bact_fung_taxa[-c(2, 5, 6, 8, 11, 12)], function(x) diversity(t(x), index = "simpson", MARGIN = 1, base = exp(1)))
 
 # Índices 10 menos representados
-shannon_index_less10 <- lapply(bact_fung_taxa_less10[-c(2, 5, 6, 8, 11, 12)], function(x) diversity(t(x), index = "shannon", base = exp(1)))
-hill_shannon_less10 <- lapply(bact_fung_taxa_less10[-c(2, 5, 6, 8, 11, 12)], function(x) hill_taxa(t(x), q = 1, MARGIN = 1, base = exp(1)))
-
-pielou_index_less10 <- lapply(bact_fung_taxa_less10[-c(2, 5, 6, 8, 11, 12)], function(x) diversity(t(x))/log(specnumber(t(x))))
-
-margalef_index_less10 <- lapply(bact_fung_taxa_less10[-c(2, 5, 6, 8, 11, 12)], function(x) apply(x, 2, margalef))
-
-simpson_index_less10 <- lapply(bact_fung_taxa_less10[-c(2, 5, 6, 8, 11, 12)], function(x) diversity(t(x), index = "simpson", MARGIN = 1, base = exp(1)))
+# shannon_index_less10 <- lapply(bact_fung_taxa_less10[-c(2, 5, 6, 8, 11, 12)], function(x) diversity(t(x), index = "shannon", base = exp(1)))
+# hill_shannon_less10 <- lapply(bact_fung_taxa_less10[-c(2, 5, 6, 8, 11, 12)], function(x) hill_taxa(t(x), q = 1, MARGIN = 1, base = exp(1)))
+#
+# pielou_index_less10 <- lapply(bact_fung_taxa_less10[-c(2, 5, 6, 8, 11, 12)], function(x) diversity(t(x))/log(specnumber(t(x))))
+#
+# margalef_index_less10 <- lapply(bact_fung_taxa_less10[-c(2, 5, 6, 8, 11, 12)], function(x) apply(x, 2, margalef))
+#
+# simpson_index_less10 <- lapply(bact_fung_taxa_less10[-c(2, 5, 6, 8, 11, 12)], function(x) diversity(t(x), index = "simpson", MARGIN = 1, base = exp(1)))
 ```
 
 
@@ -181,38 +181,38 @@ modelos_nt <- cbind(modelos_nt, vel = modelos_nt$mean.Velocity)
 
 # Menos 10 representados
 
-all_lists_less10 <- list(
-  # hill_shannon_less10 = hill_shannon,
-  # pielou_index_less10 = pielou_index,
-  # margalef_index_less10 = margalef_index,
-  # simpson_index_less10 = simpson_index,
-  shannon_index_less10 = shannon_index
-)
-
-
-indices_less10 <- lapply(names(all_lists_less10), function(list_name) {
-  lista <- all_lists_less10[[list_name]]
-  repla <- gsub("_index_", "_", list_name) # Remove "_index_" from list_name
-  names(lista) <- lapply(names(lista), function(df) {
-    gsub("reads", repla, df) # Replace "reads" with the modified list_name
-  })
-  as.data.frame(lista)
-})
-
-indices_less10 <- as.data.frame(do.call(cbind, indices_less10))
-
-env_data_nt <- as.data.frame(env_data_nt)
-env_data_normal <- as.data.frame(env_data_normal)
-
-indices2_less10 <- indices_less10[,c("Bacteria_species_shannon_less10", "Fungi_species_shannon_less10",
-          "Bacteria_genus_shannon_less10", "Fungi_genus_shannon_less10",
-          "Bacteria_family_shannon_less10", "Fungi_family_shannon_less10")]
-
-modelos_less10 <- as.data.frame(cbind(indices2_less10, env_data_normal))
-modelos_less10 <- cbind(modelos_less10, vel = modelos_less10$mean.Velocity)
-
-modelos_nt_less10 <- as.data.frame(cbind(indices2_less10, env_data_nt))
-modelos_nt_less10 <- cbind(modelos_nt_less10, vel = modelos_nt_less10$mean.Velocity)
+# all_lists_less10 <- list(
+#   # hill_shannon_less10 = hill_shannon,
+#   # pielou_index_less10 = pielou_index,
+#   # margalef_index_less10 = margalef_index,
+#   # simpson_index_less10 = simpson_index,
+#   shannon_index_less10 = shannon_index
+# )
+#
+#
+# indices_less10 <- lapply(names(all_lists_less10), function(list_name) {
+#   lista <- all_lists_less10[[list_name]]
+#   repla <- gsub("_index_", "_", list_name) # Remove "_index_" from list_name
+#   names(lista) <- lapply(names(lista), function(df) {
+#     gsub("reads", repla, df) # Replace "reads" with the modified list_name
+#   })
+#   as.data.frame(lista)
+# })
+#
+# indices_less10 <- as.data.frame(do.call(cbind, indices_less10))
+#
+# env_data_nt <- as.data.frame(env_data_nt)
+# env_data_normal <- as.data.frame(env_data_normal)
+#
+# indices2_less10 <- indices_less10[,c("Bacteria_species_shannon_less10", "Fungi_species_shannon_less10",
+#           "Bacteria_genus_shannon_less10", "Fungi_genus_shannon_less10",
+#           "Bacteria_family_shannon_less10", "Fungi_family_shannon_less10")]
+#
+# modelos_less10 <- as.data.frame(cbind(indices2_less10, env_data_normal))
+# modelos_less10 <- cbind(modelos_less10, vel = modelos_less10$mean.Velocity)
+#
+# modelos_nt_less10 <- as.data.frame(cbind(indices2_less10, env_data_nt))
+# modelos_nt_less10 <- cbind(modelos_nt_less10, vel = modelos_nt_less10$mean.Velocity)
 
 ```
 
@@ -229,24 +229,7 @@ fungi_div_alt <- nls(Fungi_species_diversidade ~ NLS.expoGrowth(Altitude, a, k),
               data = modelos)
 
 # Fungi_species_div ~ LUI_500m
-modelos_retirado <- modelos[!(row.names(modelos) %in% "CasM1"),]
-ggplot(modelos_retirado, aes(LUI_500m, Fungi_species_diversidade)) +
-  geom_point() +
-  geom_text_repel(aes(label = rownames(modelos_retirado)))
-
-fungi_div_500m <- nls(Fungi_species_diversidade ~ NLS.expoGrowth(LUI_500m, a, k), data = modelos_retirado)
-
-par(mfrow = c(1, 1))
-plot_nls(fungi_div_500m)
-r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_500m)$PseudoR2, digits = 4))))
-pval <- bquote(paste(bold("p-value: " == .(format(summary(fungi_div_500m)$coefficients[2,4], digits = 5)))))
-mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
-mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
-
-par(mfrow = c(2, 2))
-plot(nlsResiduals(fungi_div_500m), which = 0)
-
-
+fungi_div_500m <- nls(Fungi_species_diversidade ~ NLS.expoGrowth(LUI_500m, a, k), data = modelos)
 
 # Fungi_species_div ~ DOmin
 # modelos_nt_retirado <- modelos_nt[!(row.names(modelos_nt) %in% "SEL1"),]
@@ -273,7 +256,7 @@ fung_div_cond <- nls(Fungi_species_diversidade ~ NLS.expoDecay(cond, a, k), data
 pdf("modelos_nao_lineares_fungos.pdf")
   # Fungi_species_div ~ PC1
   par(mfrow = c(2, 2))
-  plot_nls(Fungi_div_PC1)
+  plot_nls(Fungi_div_PC1, ylab = "S")
   r2 <- bquote(paste("R"^2 == .(format(R2nls(Fungi_div_PC1)$PseudoR2, digits = 4))))
   pval <- bquote(paste(bold("p-value: " == .(format(summary(Fungi_div_PC1)$coefficients[2,4], digits = 5)))))
   mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
@@ -285,7 +268,7 @@ pdf("modelos_nao_lineares_fungos.pdf")
 
   # Fungi_species_div ~ alt
   # par(mfrow = c(1, 1))
-  plot_nls(fungi_div_alt)
+  plot_nls(fungi_div_alt, ylab = "S")
   r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_alt)$PseudoR2, digits = 4))))
   pval <- bquote(paste(bold("p-value: " == .(format(summary(fungi_div_alt)$coefficients[2,4], digits = 5)))))
   mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
@@ -294,20 +277,20 @@ pdf("modelos_nao_lineares_fungos.pdf")
   # par(mfrow = c(2, 2))
   # plot(nlsResiduals(fungi_div_alt), which = 0)
 
-  # Fungi_species_div ~ LUI_500m
+  # Fungi_species_div ~ LUI_subasin
   # par(mfrow = c(1, 1))
-  plot_nls(fungi_div_subasin)
-  r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_subasin)$PseudoR2, digits = 4))))
-  pval <- bquote(paste(bold("p-value: " == .(format(summary(fungi_div_subasin)$coefficients[2,4], digits = 5)))))
+  plot_nls(fungi_div_500m, ylab = "S")
+  r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_500m)$PseudoR2, digits = 4))))
+  pval <- bquote(paste(bold("p-value: " == .(format(summary(fungi_div_500m)$coefficients[2,4], digits = 5)))))
   mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
   mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
 
   # par(mfrow = c(2, 2))
-  # plot(nlsResiduals(fungi_div_subasin), which = 0)
+  # plot(nlsResiduals(fungi_div_500m), which = 0)
 
   # Fungi_species_div ~ cond
   # par(mfrow = c(1, 2))
-  plot_nls(fung_div_cond)
+  plot_nls(fung_div_cond, ylab = "S")
   r2 <- bquote(paste("R"^2 == .(format(R2nls(fung_div_cond)$PseudoR2, digits = 4))))
   pval <- bquote(paste(bold("p-value: " == .(format(summary(fung_div_cond)$coefficients[2,4], digits = 5)))))
   mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
@@ -322,22 +305,22 @@ dev.off()
 ```{r}
 ########## Bactérias #############
 # Bacteria_species_div ~ qbr
-bact_div_qbr <- nls(Bacteria_species_diversidade ~ NLS.expoDecay(qbr, a, k), data = modelos)
-
-# Bacteria_species_div ~ alt
-bact_div_alt <- nls(Bacteria_species_diversidade ~ SSgauss(Altitude, mu, sigma, h), data = modelos)
-
-# Bacteria_species_div ~ LUI_500m
-bact_div_500m <- nls(Bacteria_species_diversidade ~ NLS.expoGrowth(LUI_500m, a, k), data = modelos)
-
-# Bacteria_species_div ~ DOmin
-bact_div_DOmin <- nls(Bacteria_species_diversidade ~ NLS.expoGrowth(DOmin, a, k), data = modelos)
-
-# Bacteria_species_div ~ cond não segue uma distribuição gaussiana
-# bact_div_cond <- nls(Bacteria_species_diversidade ~ SSgauss(cond, mu, sigma, h), data = modelos)
-
-# Bacteria_species_div ~ DIN
-bact_div_din <- nls(Bacteria_species_diversidade ~ SSgauss(DIN, mu, sigma, h), data = modelos)
+# bact_div_qbr <- nls(Bacteria_species_diversidade ~ NLS.expoDecay(qbr, a, k), data = modelos)
+#
+# # Bacteria_species_div ~ alt
+# bact_div_alt <- nls(Bacteria_species_diversidade ~ SSgauss(Altitude, mu, sigma, h), data = modelos)
+#
+# # Bacteria_species_div ~ LUI_500m
+# bact_div_500m <- nls(Bacteria_species_diversidade ~ NLS.expoGrowth(LUI_500m, a, k), data = modelos)
+#
+# # Bacteria_species_div ~ DOmin
+# bact_div_DOmin <- nls(Bacteria_species_diversidade ~ NLS.expoGrowth(DOmin, a, k), data = modelos)
+#
+# # Bacteria_species_div ~ cond não segue uma distribuição gaussiana
+# # bact_div_cond <- nls(Bacteria_species_diversidade ~ SSgauss(cond, mu, sigma, h), data = modelos)
+#
+# # Bacteria_species_div ~ DIN
+# bact_div_din <- nls(Bacteria_species_diversidade ~ SSgauss(DIN, mu, sigma, h), data = modelos)
 
 # Bacteria_species_div ~ P.PO4
 # modelos_retirado <- modelos_nt[!(row.names(modelos) %in% c("LAB1", "NES1", "SAL1")),]
@@ -345,23 +328,23 @@ bact_div_din <- nls(Bacteria_species_diversidade ~ SSgauss(DIN, mu, sigma, h), d
 #   geom_point() +
 #   geom_text_repel(aes(label = rownames(modelos_retirado)))
 
-bact_div_po4 <- nls(Bacteria_species_diversidade ~ SSgauss(P.PO4, mu, sigma, h), data = modelos)
-
-# Bacteria_species_div ~ Tmax
-# bact_div_tmax <- nls(Bacteria_species_diversidade ~ NLS.bragg.3(Tmax, b, d, e), data = modelos)
-bact_div_tmax <- nls(Bacteria_species_diversidade ~ SSgauss(Tmax, mu, sigma, h), data = modelos)
+# bact_div_po4 <- nls(Bacteria_species_diversidade ~ SSgauss(P.PO4, mu, sigma, h), data = modelos)
+#
+# # Bacteria_species_div ~ Tmax
+# # bact_div_tmax <- nls(Bacteria_species_diversidade ~ NLS.bragg.3(Tmax, b, d, e), data = modelos)
+# bact_div_tmax <- nls(Bacteria_species_diversidade ~ SSgauss(Tmax, mu, sigma, h), data = modelos)
 
 # bact_div_tmax <- nls(Bacteria_species_diversidade ~ SSquadp(Tmax, a, b, c, xs),
 #                      data = modelos)
 
 # Bacteria_species_shannon ~ Discharge
-bact_shannon_discharge <- nls(Bacteria_species_shannon ~ NLS.expoDecay(Discharge, a, k), data = modelos)
-
-# Bacteria_species_shannon ~ Tmax
-bact_shannon_tmax <- nls(Bacteria_species_shannon ~ NLS.expoDecay(Tmax, a, k), data = modelos)
-
-# Bacteria_species_shannon ~ subasin
-bact_shannon_subasin <- nls(Bacteria_species_shannon ~ SSgauss(LUI_subasin, mu, sigma, h), data = modelos)
+# bact_shannon_discharge <- nls(Bacteria_species_shannon ~ NLS.expoDecay(Discharge, a, k), data = modelos)
+#
+# # Bacteria_species_shannon ~ Tmax
+# bact_shannon_tmax <- nls(Bacteria_species_shannon ~ NLS.expoDecay(Tmax, a, k), data = modelos)
+#
+# # Bacteria_species_shannon ~ subasin
+# bact_shannon_subasin <- nls(Bacteria_species_shannon ~ SSgauss(LUI_subasin, mu, sigma, h), data = modelos)
 
 # Bacteria_species_shannon ~ mean.Velocity
 modelos_retirado <- modelos_nt[!(row.names(modelos) %in% c("CBR1", "TAve2")),]
@@ -372,6 +355,11 @@ modelos_retirado |>
   ggplot(aes(mean.Velocity, Bacteria_species_shannon)) +
   geom_point() +
   geom_text_repel(aes(label = rownames(modelos_retirado)))
+
+modelos |>
+  ggplot(aes(mean.Velocity, Bacteria_species_shannon)) +
+  geom_point() +
+  geom_text_repel(aes(label = rownames(modelos)))
 
 par(mfrow = c(1, 1))
 plot_nls(bact_shannon_mv)
@@ -815,4 +803,9 @@ for (i in colnames(indices_less10)) {
 dev.off()
 
 
+```
+
+```{r}
+# NMDS
+nmds <- lapply(bact_fung_taxa, metaMDS, distance = "bray")
 ```

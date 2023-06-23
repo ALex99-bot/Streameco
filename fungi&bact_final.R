@@ -1,6 +1,6 @@
 # Set the directory and file name
-# directory <- "/home/pedro/PycharmProjects/Streameco"
-directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
+directory <- "/home/pedro/PycharmProjects/Streameco"
+# directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
 # directory <-"C:/Users/asus/Desktop/Streameco"
 setwd(directory)
 
@@ -196,6 +196,7 @@ Fungi_div_PC1 <- nls(Fungi_species_diversidade ~ NLS.expoDecay(PC1, a, k), data 
 fungi_div_alt <- nls(Fungi_species_diversidade ~ NLS.expoGrowth(Altitude, a, k),
              data = modelos_nt)
 
+fungi_div_500m <- nls(Fungi_species_diversidade ~ NLS.expoDecay(LUI_500m, a, k), data = modelos)
 # Fungi_species_div ~ LUI_500m
 modelos_retirado <- modelos[!(row.names(modelos) %in% c("ROD1", "SOU1")),]
 ggplot(modelos_retirado, aes(LUI_500m, Fungi_species_diversidade)) +
