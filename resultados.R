@@ -152,7 +152,7 @@ fungi_div_alt <- nls(Fungi_species_diversidade ~ NLS.expoGrowth(Altitude, a, k),
 fungi_div_500m <- nls(Fungi_species_diversidade ~ NLS.expoDecay(LUI_500m, a, k), data = modelos)
 
 # Fungi_species_div ~ cond
-fung_div_cond <- nls(Fungi_species_diversidade ~ NLS.expoDecay(cond, a, k), data = modelos_nt)
+fung_div_cond <- nls(Fungi_species_diversidade ~ NLS.expoDecay(cond, a, k), data = modelos)
 
 
 png("modelos_nao_lineares_fungos.png")
@@ -206,44 +206,24 @@ dev.off()
 
 ########## Bactérias #############
 # Bacteria_species_shannon ~ mean.Velocity
-modelos_retirado <- modelos_nt[!(row.names(modelos) %in% c("CBR1", "TAve2")),]
+# modelos_retirado <- modelos_nt[!(row.names(modelos) %in% c("CBR1", "TAve2")),]
 
-bact_shannon_mv <- nls(Bacteria_species_shannon ~ SSgauss(mean.Velocity, mu, sigma, h), data = modelos_retirado)
+bact_shannon_mv <- nls(Bacteria_species_shannon ~ SSgauss(mean.Velocity, mu, sigma, h), data = modelos)
 
-modelos_retirado |>
-  ggplot(aes(mean.Velocity, Bacteria_species_shannon)) +
+
+# modelos_retirado |>
+#   ggplot(aes(mean.Velocity, Bacteria_species_shannon)) +
+#   geom_point() +
+#   geom_text_repel(aes(label = rownames(modelos_retirado)))
+
+# Create the ggplot
+bacterias_modelo <- ggplot(modelos, aes(mean.Velocity, Bacteria_species_shannon)) +
   geom_point() +
-  geom_text_repel(aes(label = rownames(modelos_retirado)))
+  stat_smooth(method = "nls", formula = y ~ SSgauss(x, mu, sigma, h), method.args = list(start = coef(bact_shannon_mv)), se = FALSE, color = "red") +
+  labs(x = "Mean Velocity", y = "H'") #+
+  #theme_minimal()
 
-modelos |>
-  ggplot(aes(mean.Velocity, Bacteria_species_shannon)) +
-  geom_point() +
-  geom_text_repel(aes(label = rownames(modelos)))
-
-par(mfrow = c(1, 1))
-plot_nls(bact_shannon_mv)
-r2 <- bquote(paste("R"^2 == .(format(R2nls(bact_shannon_mv)$PseudoR2, digits = 4))))
-pval <- bquote(paste(bold("p-value: " == .(format(summary(bact_shannon_mv)$coefficients[2,4], digits = 5)))))
-mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
-mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
-
-par(mfrow = c(2, 2))
-plot(nlsResiduals(bact_shannon_mv), which = 0)
-
-png("modelos_nao_lineares_bacterias_retirado.png")
-  # Bacteria_species_shannon ~ mean.Velocity
-  par(mfrow = c(1, 1))
-  plot_nls(bact_shannon_mv, xlab = " Mean velocity sqrt", ylab = "H'")
-  # Obtain R-squared value
-  r2 <- bquote(paste("R"^2 == .(format(R2nls(bact_shannon_mv)$PseudoR2, digits = 4))))
-  pval <- bquote(paste(bold("p-value: " == .(format(summary(bact_shannon_mv)$coefficients[2,4], digits = 5)))))
-  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
-  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
-
-  #par(mfrow = c(2, 2))
-  #plot(nlsResiduals(bact_shannon_mv), which = 0)
-
-dev.off()
+ggsave("modelo_bacterias.png", bacterias_modelo, width = 8, height = 6, dpi = 300)
 
 
 # modelos_retirado |>
@@ -266,6 +246,15 @@ dev.off()
 nmds <- lapply(bact_fung_taxa, metaMDS, distance = "bray")
 
 scores(nmds)
+
+
+# Load the required packages
+library(ggplot2)
+library(dplyr)
+
+# Fit the model
+model <- nls(Bacteria_species_shannon ~ SSgauss(mean.Velocity, mu, sigma, h), data = modelos)
+
 
 
 
