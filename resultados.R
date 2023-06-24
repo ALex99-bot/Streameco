@@ -1,5 +1,5 @@
-# directory <- "/home/pedro/PycharmProjects/Streameco"
-directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
+directory <- "/home/pedro/PycharmProjects/Streameco"
+# directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
 # directory <-"C:/Users/asus/Desktop/Streameco"
 setwd(directory)
 
@@ -33,6 +33,7 @@ library(xcms)
 library(hillR)
 library(nlraa)
 library(tidyverse)
+library(gridExtra)
 
 read_excel_sheets <- function(path, file){
   my_sheet_names <- excel_sheets(path)
@@ -154,62 +155,96 @@ fungi_div_500m <- nls(Fungi_species_diversidade ~ NLS.expoDecay(LUI_500m, a, k),
 # Fungi_species_div ~ cond
 fung_div_cond <- nls(Fungi_species_diversidade ~ NLS.expoDecay(cond, a, k), data = modelos)
 
+# Generate predicted values from the models
+modelos$predicted_div_PC1 <- predict(Fungi_div_PC1)
+modelos$predicted_div_alt <- predict(fungi_div_alt)
+modelos$predicted_div_500m <- predict(fungi_div_500m)
+modelos$predicted_div_cond <- predict(fung_div_cond)
 
-png("modelos_nao_lineares_fungos.png")
-  # Fungi_species_div ~ PC1
-  par(mfrow = c(2, 2))
-  plot_nls(Fungi_div_PC1, ylab = "S")
-  r2 <- bquote(paste("R"^2 == .(format(R2nls(Fungi_div_PC1)$PseudoR2, digits = 4))))
-  pval <- bquote(paste(bold("p-value: " == .(format(summary(Fungi_div_PC1)$coefficients[2,4], digits = 5)))))
-  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
-  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+# Create individual plots for each model
+plot_PC1 <- ggplot(modelos, aes(x = PC1, y = Fungi_species_diversidade)) +
+  geom_point() +
+  geom_line(aes(y = predicted_div_PC1), color = "blue") +
+  labs(x = "PC1", y = "S") # +
+  # ggtitle("Fungi_species_div ~ PC1")
 
-  # par(mfrow = c(2, 2))
-  # plot(nlsResiduals(Fungi_div_PC1), which = 0)
+plot_alt <- ggplot(modelos, aes(x = Altitude, y = Fungi_species_diversidade)) +
+  geom_point() +
+  geom_line(aes(y = predicted_div_alt), color = "red") +
+  labs(x = "Altitude", y = "S") # +
+  # ggtitle("Fungi_species_div ~ alt")
+
+plot_500m <- ggplot(modelos, aes(x = LUI_500m, y = Fungi_species_diversidade)) +
+  geom_point() +
+  geom_line(aes(y = predicted_div_500m), color = "green") +
+  labs(x = "LUI", y = "S") # +
+  # ggtitle("Fungi_species_div ~ LUI_500m")
+
+plot_cond <- ggplot(modelos, aes(x = cond, y = Fungi_species_diversidade)) +
+  geom_point() +
+  geom_line(aes(y = predicted_div_cond), color = "purple") +
+  labs(x = "Conductivity", y = "S") # +
+  # ggtitle("Fungi_species_div ~ cond")
+
+# Combine all the plots into a single image
+combined_plot <- grid.arrange(plot_PC1, plot_alt, plot_500m, plot_cond, ncol = 2)
+
+# Save the combined plot as an image
+ggsave("modelos_fungos.png", combined_plot, width = 10, height = 8, dpi = 300)
 
 
-  # Fungi_species_div ~ alt
-  # par(mfrow = c(1, 1))
-  plot_nls(fungi_div_alt, ylab = "S")
-  r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_alt)$PseudoR2, digits = 4))))
-  pval <- bquote(paste(bold("p-value: " == .(format(summary(fungi_div_alt)$coefficients[2,4], digits = 5)))))
-  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
-  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
-
-  # par(mfrow = c(2, 2))
-  # plot(nlsResiduals(fungi_div_alt), which = 0)
-
-  # Fungi_species_div ~ LUI_subasin
-  # par(mfrow = c(1, 1))
-  plot_nls(fungi_div_500m, ylab = "S")
-  r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_500m)$PseudoR2, digits = 4))))
-  pval <- bquote(paste(bold("p-value: " == .(format(summary(fungi_div_500m)$coefficients[2,4], digits = 5)))))
-  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
-  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
-
-  # par(mfrow = c(2, 2))
-  # plot(nlsResiduals(fungi_div_500m), which = 0)
-
-  # Fungi_species_div ~ cond
-  # par(mfrow = c(1, 2))
-  plot_nls(fung_div_cond, ylab = "S")
-  r2 <- bquote(paste("R"^2 == .(format(R2nls(fung_div_cond)$PseudoR2, digits = 4))))
-  pval <- bquote(paste(bold("p-value: " == .(format(summary(fung_div_cond)$coefficients[2,4], digits = 5)))))
-  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
-  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
-
-  # par(mfrow = c(2, 2))
-  # plot(nlsResiduals(fung_div_cond), which = 0)
-
-dev.off()
+# png("modelos_fungos.png")
+#   # Fungi_species_div ~ PC1
+#   par(mfrow = c(2, 2))
+#   plot_nls(Fungi_div_PC1, ylab = "S")
+#   r2 <- bquote(paste("R"^2 == .(format(R2nls(Fungi_div_PC1)$PseudoR2, digits = 4))))
+#   pval <- bquote(paste(bold("p-value: " == .(format(summary(Fungi_div_PC1)$coefficients[2,4], digits = 5)))))
+#   mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+#   mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+#
+#   # par(mfrow = c(2, 2))
+#   # plot(nlsResiduals(Fungi_div_PC1), which = 0)
+#
+#
+#   # Fungi_species_div ~ alt
+#   # par(mfrow = c(1, 1))
+#   plot_nls(fungi_div_alt, ylab = "S")
+#   r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_alt)$PseudoR2, digits = 4))))
+#   pval <- bquote(paste(bold("p-value: " == .(format(summary(fungi_div_alt)$coefficients[2,4], digits = 5)))))
+#   mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+#   mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+#
+#   # par(mfrow = c(2, 2))
+#   # plot(nlsResiduals(fungi_div_alt), which = 0)
+#
+#   # Fungi_species_div ~ LUI_subasin
+#   # par(mfrow = c(1, 1))
+#   plot_nls(fungi_div_500m, ylab = "S")
+#   r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_500m)$PseudoR2, digits = 4))))
+#   pval <- bquote(paste(bold("p-value: " == .(format(summary(fungi_div_500m)$coefficients[2,4], digits = 5)))))
+#   mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+#   mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+#
+#   # par(mfrow = c(2, 2))
+#   # plot(nlsResiduals(fungi_div_500m), which = 0)
+#
+#   # Fungi_species_div ~ cond
+#   # par(mfrow = c(1, 2))
+#   plot_nls(fung_div_cond, ylab = "S")
+#   r2 <- bquote(paste("R"^2 == .(format(R2nls(fung_div_cond)$PseudoR2, digits = 4))))
+#   pval <- bquote(paste(bold("p-value: " == .(format(summary(fung_div_cond)$coefficients[2,4], digits = 5)))))
+#   mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+#   mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+#
+#   # par(mfrow = c(2, 2))
+#   # plot(nlsResiduals(fung_div_cond), which = 0)
+#
+# dev.off()
 
 
 ########## Bactérias #############
 # Bacteria_species_shannon ~ mean.Velocity
-# modelos_retirado <- modelos_nt[!(row.names(modelos) %in% c("CBR1", "TAve2")),]
-
 bact_shannon_mv <- nls(Bacteria_species_shannon ~ SSgauss(mean.Velocity, mu, sigma, h), data = modelos)
-
 
 # modelos_retirado |>
 #   ggplot(aes(mean.Velocity, Bacteria_species_shannon)) +
@@ -220,7 +255,7 @@ bact_shannon_mv <- nls(Bacteria_species_shannon ~ SSgauss(mean.Velocity, mu, sig
 bacterias_modelo <- ggplot(modelos, aes(mean.Velocity, Bacteria_species_shannon)) +
   geom_point() +
   stat_smooth(method = "nls", formula = y ~ SSgauss(x, mu, sigma, h), method.args = list(start = coef(bact_shannon_mv)), se = FALSE, color = "red") +
-  labs(x = "Mean Velocity", y = "H'") #+
+  labs(x = "Mean velocity", y = "H'") #+
   #theme_minimal()
 
 ggsave("modelo_bacterias.png", bacterias_modelo, width = 8, height = 6, dpi = 300)
@@ -246,15 +281,4 @@ ggsave("modelo_bacterias.png", bacterias_modelo, width = 8, height = 6, dpi = 30
 nmds <- lapply(bact_fung_taxa, metaMDS, distance = "bray")
 
 scores(nmds)
-
-
-# Load the required packages
-library(ggplot2)
-library(dplyr)
-
-# Fit the model
-model <- nls(Bacteria_species_shannon ~ SSgauss(mean.Velocity, mu, sigma, h), data = modelos)
-
-
-
 
