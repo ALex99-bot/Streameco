@@ -1,5 +1,5 @@
-directory <- "/home/pedro/PycharmProjects/Streameco"
-# directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
+# directory <- "/home/pedro/PycharmProjects/Streameco"
+directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
 # directory <-"C:/Users/asus/Desktop/Streameco"
 setwd(directory)
 
@@ -164,25 +164,25 @@ modelos$predicted_div_cond <- predict(fung_div_cond)
 # Create individual plots for each model
 plot_PC1 <- ggplot(modelos, aes(x = PC1, y = Fungi_species_diversidade)) +
   geom_point() +
-  geom_line(aes(y = predicted_div_PC1), color = "blue") +
+  geom_line(aes(y = predicted_div_PC1)) +
   labs(x = "PC1", y = "S") # +
   # ggtitle("Fungi_species_div ~ PC1")
 
 plot_alt <- ggplot(modelos, aes(x = Altitude, y = Fungi_species_diversidade)) +
   geom_point() +
-  geom_line(aes(y = predicted_div_alt), color = "red") +
+  geom_line(aes(y = predicted_div_alt)) +
   labs(x = "Altitude", y = "S") # +
   # ggtitle("Fungi_species_div ~ alt")
 
 plot_500m <- ggplot(modelos, aes(x = LUI_500m, y = Fungi_species_diversidade)) +
   geom_point() +
-  geom_line(aes(y = predicted_div_500m), color = "green") +
+  geom_line(aes(y = predicted_div_500m)) +
   labs(x = "LUI", y = "S") # +
   # ggtitle("Fungi_species_div ~ LUI_500m")
 
 plot_cond <- ggplot(modelos, aes(x = cond, y = Fungi_species_diversidade)) +
   geom_point() +
-  geom_line(aes(y = predicted_div_cond), color = "purple") +
+  geom_line(aes(y = predicted_div_cond)) +
   labs(x = "Conductivity", y = "S") # +
   # ggtitle("Fungi_species_div ~ cond")
 
@@ -254,7 +254,7 @@ bact_shannon_mv <- nls(Bacteria_species_shannon ~ SSgauss(mean.Velocity, mu, sig
 # Create the ggplot
 bacterias_modelo <- ggplot(modelos, aes(mean.Velocity, Bacteria_species_shannon)) +
   geom_point() +
-  stat_smooth(method = "nls", formula = y ~ SSgauss(x, mu, sigma, h), method.args = list(start = coef(bact_shannon_mv)), se = FALSE, color = "red") +
+  stat_smooth(method = "nls", formula = y ~ SSgauss(x, mu, sigma, h), method.args = list(start = coef(bact_shannon_mv)), se = FALSE) +
   labs(x = "Mean velocity", y = "H'") #+
   #theme_minimal()
 
