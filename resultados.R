@@ -217,16 +217,16 @@ ggsave("modelos_fungos.png", combined_plot, width = 10, height = 8, dpi = 300)
 #   # par(mfrow = c(2, 2))
 #   # plot(nlsResiduals(fungi_div_alt), which = 0)
 #
-#   # Fungi_species_div ~ LUI_subasin
-#   # par(mfrow = c(1, 1))
-#   plot_nls(fungi_div_500m, ylab = "S")
-#   r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_500m)$PseudoR2, digits = 4))))
-#   pval <- bquote(paste(bold("p-value: " == .(format(summary(fungi_div_500m)$coefficients[2,4], digits = 5)))))
-#   mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
-#   mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
-#
-#   # par(mfrow = c(2, 2))
-#   # plot(nlsResiduals(fungi_div_500m), which = 0)
+  # Fungi_species_div ~ LUI_500m
+  # par(mfrow = c(1, 1))
+  plot_nls(fungi_div_500m, ylab = "S")
+  r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_500m)$PseudoR2, digits = 4))))
+  pval <- bquote(paste(bold("p-value: " == .(format(summary(fungi_div_500m)$coefficients[2,4], digits = 5)))))
+  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+
+  par(mfrow = c(2, 2))
+  plot(nlsResiduals(fungi_div_500m), which = 0)
 #
 #   # Fungi_species_div ~ cond
 #   # par(mfrow = c(1, 2))
@@ -281,4 +281,6 @@ ggsave("modelo_bacterias.png", bacterias_modelo, width = 8, height = 6, dpi = 30
 nmds <- lapply(bact_fung_taxa, metaMDS, distance = "bray")
 
 scores(nmds)
+
+
 
