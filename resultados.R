@@ -1,5 +1,5 @@
-directory <- "/home/pedro/PycharmProjects/Streameco"
-# directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
+# directory <- "/home/pedro/PycharmProjects/Streameco"
+directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
 # directory <-"C:/Users/asus/Desktop/Streameco"
 setwd(directory)
 
@@ -171,7 +171,7 @@ plot_PC1 <- ggplot(modelos, aes(x = PC1, y = Fungi_species_diversidade)) +
 plot_alt <- ggplot(modelos, aes(x = Altitude, y = Fungi_species_diversidade)) +
   geom_point() +
   geom_line(aes(y = predicted_div_alt)) +
-  labs(x = "Altitude", y = "S") # +
+  labs(x = "Altitude (m)", y = "S") # +
   # ggtitle("Fungi_species_div ~ alt")
 
 plot_500m <- ggplot(modelos, aes(x = LUI_500m, y = Fungi_species_diversidade)) +
@@ -183,7 +183,7 @@ plot_500m <- ggplot(modelos, aes(x = LUI_500m, y = Fungi_species_diversidade)) +
 plot_cond <- ggplot(modelos, aes(x = cond, y = Fungi_species_diversidade)) +
   geom_point() +
   geom_line(aes(y = predicted_div_cond)) +
-  labs(x = "Conductivity", y = "S") # +
+  labs(x = "Conductivity (\u03BCS/cm)", y = "S") # +
   # ggtitle("Fungi_species_div ~ cond")
 
 # Combine all the plots into a single image
@@ -255,7 +255,7 @@ bact_shannon_mv <- nls(Bacteria_species_shannon ~ SSgauss(mean.Velocity, mu, sig
 bacterias_modelo <- ggplot(modelos, aes(mean.Velocity, Bacteria_species_shannon)) +
   geom_point() +
   stat_smooth(method = "nls", formula = y ~ SSgauss(x, mu, sigma, h), method.args = list(start = coef(bact_shannon_mv)), se = FALSE) +
-  labs(x = "Mean velocity", y = "H'") #+
+  labs(x = "Mean velocity (m s^-1)", y = "H'") #+
   #theme_minimal()
 
 ggsave("modelo_bacterias.png", bacterias_modelo, width = 8, height = 6, dpi = 300)
