@@ -1,5 +1,5 @@
-# directory <- "/home/pedro/PycharmProjects/Streameco"
-directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
+directory <- "/home/pedro/PycharmProjects/Streameco"
+# directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
 # directory <-"C:/Users/asus/Desktop/Streameco"
 setwd(directory)
 
@@ -8,11 +8,13 @@ top10 <- "top10.xlsx"
 less10 <- "top10inv.xlsx"
 file3 <- "menor_cutoff_reads.xlsx"
 hypho_file <- "hyphomycetes_aquaticos.xlsx"
+sem_cutoff <- "todos.xlsx"
 path <- file.path(directory, file)
 path2 <- file.path(directory, top10)
 path3 <- file.path(directory, file3)
 hypho_path <- file.path(directory, hypho_file)
 less10_path <- file.path(directory, less10)
+sem_cutoff_path <- file.path(directory, sem_cutoff)
 
 # Load the required packages
 library(readxl)
@@ -34,6 +36,11 @@ library(hillR)
 library(nlraa)
 library(tidyverse)
 library(gridExtra)
+library(tools)
+library(scales)
+
+
+set.seed(2)
 
 read_excel_sheets <- function(path, file){
   my_sheet_names <- excel_sheets(path)
@@ -48,8 +55,13 @@ excel2dataframe <- function(x) {
   x <- x[, -1]
 }
 
+excel2dataframe_total <- function(x) {
+  x <- as.data.frame(x)
+}
+
 bact_fung_taxa <- lapply(read_excel_sheets(path, file), excel2dataframe)
 # bact_fung_taxa_less10 <- lapply(read_excel_sheets(less10_path, less10), excel2dataframe)
+sem_cutoff_taxa <- lapply(read_excel_sheets(sem_cutoff_path, sem_cutoff), excel2dataframe_total)
 
 # Variáveis ambientais
 bacias <- read_excel("STREAMECO database - environment (copy).xlsx", "LandUse")
@@ -282,5 +294,45 @@ nmds <- lapply(bact_fung_taxa, metaMDS, distance = "bray")
 
 scores(nmds)
 
+# Diversidade
+tidy_data <- setNames(
+  lapply(names(sem_cutoff_taxa), function(list_name) {
+    lista <- sem_cutoff_taxa[[list_name]]
+    gathered_data <- pivot_longer(lista, cols = -1, names_to = "Sample", values_to = "Percent")
+    attr(gathered_data, "original_name") <- list_name  # Store the original name as an attribute
+    return(gathered_data)
+  }),
+  names(sem_cutoff_taxa)
+)
+
+tidy_data2 <- tidy_data[c(6, 12)]
+
+barplot_list <- setNames(lapply(names(tidy_data2), function(list_name) {
+  df <- tidy_data2[[list_name]]
+  repla <- gsub(".*_", "", list_name)
+  df_filtered <- df %>% filter(Percent != 0)
+  ggplot(df_filtered, aes(x = .data[[repla]], y = Percent, fill = Sample)) +
+    geom_bar(position="fill", stat="identity") +
+    labs(x = paste(toTitleCase(repla), "es", sep=""), y = "Average percentage of reads", fill = "Samples") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 4.5),
+      #legend.position = "bottom",
+      legend.text = element_text(size = 8,       # Adjust the font size of the legend text (set to 8 or adjust as needed)
+                               hjust = 0.5,     # Center the text horizontally in the legend key
+                               vjust = 0.5)) +
+    guides(fill = guide_legend(label.hjust = 0.5, label.vjust = 0.5)) +
+    scale_y_continuous(labels = percent_format(scale = 100)) # Set y-axis labels as percentages
+}), names(tidy_data2))
 
 
+
+# Print the bar plots
+print(barplot_list[[1]]) # Print the first bar plot
+print(barplot_list[[2]]) # Print the second bar plot
+
+
+# Save each plot with a unique filename based on the original name of the data frame
+# Save each plot with a unique filename based on the original name of the data frame
+for(i in seq_along(barplot_list)) {
+  filename <- paste0(directory, attr(tidy_data[[i]], "original_name"), ".png")
+  ggsave(filename, plot = barplot_list[[i]], width = 8, height = 5.2, dpi = 300)  # Adjust width and height as needed
+}
