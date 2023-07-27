@@ -293,6 +293,9 @@ ggsave("modelo_bacterias.png", bacterias_modelo, width = 8, height = 6, dpi = 30
 nmds <- lapply(bact_fung_taxa, metaMDS, distance = "bray")
 
 scores(nmds)
+ordiplot(example_NMDS,type="n")
+orditorp(example_NMDS,display="species",col="red",air=0.01)
+orditorp(example_NMDS,display="sites",cex=1.25,air=0.01)
 
 # Diversidade
 tidy_data <- setNames(
