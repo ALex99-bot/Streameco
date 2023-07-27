@@ -40,7 +40,7 @@ library(tools)
 library(scales)
 
 
-set.seed(2)
+set.seed(2023)
 
 read_excel_sheets <- function(path, file){
   my_sheet_names <- excel_sheets(path)
