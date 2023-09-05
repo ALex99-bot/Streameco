@@ -9,12 +9,14 @@ less10 <- "top10inv.xlsx"
 file3 <- "menor_cutoff_reads.xlsx"
 hypho_file <- "hyphomycetes_aquaticos.xlsx"
 sem_cutoff <- "todos.xlsx"
+top10_percent <- "top10_percent.xlsx"
 path <- file.path(directory, file)
 path2 <- file.path(directory, top10)
 path3 <- file.path(directory, file3)
 hypho_path <- file.path(directory, hypho_file)
 less10_path <- file.path(directory, less10)
 sem_cutoff_path <- file.path(directory, sem_cutoff)
+top10_percent_path <- file.path(directory, top10_percent)
 
 # Load the required packages
 library(readxl)
@@ -62,6 +64,8 @@ excel2dataframe_total <- function(x) {
 bact_fung_taxa <- lapply(read_excel_sheets(path, file), excel2dataframe)
 # bact_fung_taxa_less10 <- lapply(read_excel_sheets(less10_path, less10), excel2dataframe)
 sem_cutoff_taxa <- lapply(read_excel_sheets(sem_cutoff_path, sem_cutoff), excel2dataframe_total)
+top10_taxa <- lapply(read_excel_sheets(path2, top10), excel2dataframe_total)
+top10_percent_taxa <- lapply(read_excel_sheets(top10_percent_path, top10_percent), excel2dataframe_total)
 
 # Variáveis ambientais
 bacias <- read_excel("STREAMECO database - environment (copy).xlsx", "LandUse")
@@ -297,15 +301,39 @@ ordiplot(example_NMDS,type="n")
 orditorp(example_NMDS,display="species",col="red",air=0.01)
 orditorp(example_NMDS,display="sites",cex=1.25,air=0.01)
 
+# Create a list of NMDS results for each data frame in bact_fung_taxa
+nmds_list <- lapply(bact_fung_taxa, function(df) {
+  metaMDS(df, distance = "bray")
+})
+
+# Access and plot the scores for each NMDS result
+scores_list <- lapply(nmds, scores)
+
+# Create empty plots for each NMDS result
+plot_list <- lapply(nmds, function(nmds) {
+  ordiplot(nmds, type = "n")
+})
+
+# Add species labels to each plot
+plot_list <- lapply(seq_along(nmds), function(i) {
+  orditorp(nmds[[i]], display = "species", col = "red", air = 0.01)
+})
+
+# Add site labels to each plot
+plot_list <- lapply(seq_along(nmds), function(i) {
+  orditorp(nmds[[i]], display = "sites", cex = 1.25, air = 0.01)
+})
+
+
 # Diversidade
 tidy_data <- setNames(
-  lapply(names(sem_cutoff_taxa), function(list_name) {
-    lista <- sem_cutoff_taxa[[list_name]]
+  lapply(names(top10_taxa), function(list_name) {
+    lista <- top10_taxa[[list_name]]
     gathered_data <- pivot_longer(lista, cols = -1, names_to = "Sample", values_to = "Percent")
     attr(gathered_data, "original_name") <- list_name  # Store the original name as an attribute
     return(gathered_data)
   }),
-  names(sem_cutoff_taxa)
+  names(top10_taxa)
 )
 
 tidy_data2 <- tidy_data[c(6, 12)]
@@ -339,3 +367,39 @@ for(i in seq_along(barplot_list)) {
   filename <- paste0(directory, attr(tidy_data[[i]], "original_name"), ".png")
   ggsave(filename, plot = barplot_list[[i]], width = 8, height = 5.2, dpi = 300)  # Adjust width and height as needed
 }
+
+
+# Diversidade
+tidy_data <- setNames(
+  lapply(names(top10_percent_taxa), function(list_name) {
+    lista <- top10_percent_taxa[[list_name]]
+    gathered_data <- pivot_longer(lista, cols = -1, names_to = "Sample", values_to = "Percent")
+    attr(gathered_data, "original_name") <- list_name  # Store the original name as an attribute
+    return(gathered_data)
+  }),
+  names(top10_percent_taxa)
+)
+
+tidy_data2 <- tidy_data[c(6, 12)]
+
+barplot_list <- setNames(lapply(names(tidy_data2), function(list_name) {
+  df <- tidy_data2[[list_name]]
+  repla <- gsub(".*_", "", list_name)
+  df_filtered <- df %>% filter(Percent != 0)
+  ggplot(df_filtered, aes(x = .data[[repla]], y = Percent, fill = Sample)) +
+    geom_bar(position="fill", stat="identity") +
+    labs(x = paste(toTitleCase(repla), "es", sep=""), y = "Average percentage of reads", fill = "Samples") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 4.5),
+      #legend.position = "bottom",
+      legend.text = element_text(size = 8,       # Adjust the font size of the legend text (set to 8 or adjust as needed)
+                               hjust = 0.5,     # Center the text horizontally in the legend key
+                               vjust = 0.5)) +
+    guides(fill = guide_legend(label.hjust = 0.5, label.vjust = 0.5)) +
+    scale_y_continuous(labels = percent_format(scale = 100)) # Set y-axis labels as percentages
+}), names(tidy_data2))
+
+
+
+# Print the bar plots
+print(barplot_list[[1]]) # Print the first bar plot
+print(barplot_list[[2]]) # Print the second bar plot
