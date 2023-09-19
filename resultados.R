@@ -294,7 +294,7 @@ ggsave("modelo_bacterias.png", bacterias_modelo, width = 8, height = 6, dpi = 30
 
 
 # NMDS
-nmds <- lapply(bact_fung_taxa, metaMDS, distance = "bray")
+nmds <- lapply(top10_taxa, metaMDS, distance = "bray")
 
 scores(nmds)
 ordiplot(example_NMDS,type="n")
@@ -302,7 +302,7 @@ orditorp(example_NMDS,display="species",col="red",air=0.01)
 orditorp(example_NMDS,display="sites",cex=1.25,air=0.01)
 
 # Create a list of NMDS results for each data frame in bact_fung_taxa
-nmds_list <- lapply(bact_fung_taxa, function(df) {
+nmds_list <- lapply(top10_taxa, function(df) {
   metaMDS(df, distance = "bray")
 })
 
@@ -362,44 +362,9 @@ print(barplot_list[[2]]) # Print the second bar plot
 
 
 # Save each plot with a unique filename based on the original name of the data frame
-# Save each plot with a unique filename based on the original name of the data frame
 for(i in seq_along(barplot_list)) {
   filename <- paste0(directory, attr(tidy_data[[i]], "original_name"), ".png")
   ggsave(filename, plot = barplot_list[[i]], width = 8, height = 5.2, dpi = 300)  # Adjust width and height as needed
 }
 
 
-# Diversidade
-tidy_data <- setNames(
-  lapply(names(top10_percent_taxa), function(list_name) {
-    lista <- top10_percent_taxa[[list_name]]
-    gathered_data <- pivot_longer(lista, cols = -1, names_to = "Sample", values_to = "Percent")
-    attr(gathered_data, "original_name") <- list_name  # Store the original name as an attribute
-    return(gathered_data)
-  }),
-  names(top10_percent_taxa)
-)
-
-tidy_data2 <- tidy_data[c(6, 12)]
-
-barplot_list <- setNames(lapply(names(tidy_data2), function(list_name) {
-  df <- tidy_data2[[list_name]]
-  repla <- gsub(".*_", "", list_name)
-  df_filtered <- df %>% filter(Percent != 0)
-  ggplot(df_filtered, aes(x = .data[[repla]], y = Percent, fill = Sample)) +
-    geom_bar(position="fill", stat="identity") +
-    labs(x = paste(toTitleCase(repla), "es", sep=""), y = "Average percentage of reads", fill = "Samples") +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 4.5),
-      #legend.position = "bottom",
-      legend.text = element_text(size = 8,       # Adjust the font size of the legend text (set to 8 or adjust as needed)
-                               hjust = 0.5,     # Center the text horizontally in the legend key
-                               vjust = 0.5)) +
-    guides(fill = guide_legend(label.hjust = 0.5, label.vjust = 0.5)) +
-    scale_y_continuous(labels = percent_format(scale = 100)) # Set y-axis labels as percentages
-}), names(tidy_data2))
-
-
-
-# Print the bar plots
-print(barplot_list[[1]]) # Print the first bar plot
-print(barplot_list[[2]]) # Print the second bar plot
