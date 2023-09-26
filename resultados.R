@@ -40,6 +40,7 @@ library(tidyverse)
 library(gridExtra)
 library(tools)
 library(scales)
+library(cowplot)
 
 
 set.seed(2023)
@@ -66,6 +67,7 @@ bact_fung_taxa <- lapply(read_excel_sheets(path, file), excel2dataframe)
 sem_cutoff_taxa <- lapply(read_excel_sheets(sem_cutoff_path, sem_cutoff), excel2dataframe_total)
 top10_taxa <- lapply(read_excel_sheets(path2, top10), excel2dataframe_total)
 top10_percent_taxa <- lapply(read_excel_sheets(top10_percent_path, top10_percent), excel2dataframe_total)
+top10_taxa_d <- lapply(read_excel_sheets(path2, top10), excel2dataframe)
 
 # Variáveis ambientais
 bacias <- read_excel("STREAMECO database - environment (copy).xlsx", "LandUse")
@@ -294,35 +296,43 @@ ggsave("modelo_bacterias.png", bacterias_modelo, width = 8, height = 6, dpi = 30
 
 
 # NMDS
-nmds <- lapply(top10_taxa, metaMDS, distance = "bray")
-
-scores(nmds)
-ordiplot(example_NMDS,type="n")
-orditorp(example_NMDS,display="species",col="red",air=0.01)
-orditorp(example_NMDS,display="sites",cex=1.25,air=0.01)
+# nmds <- lapply(top10_taxa_d, metaMDS, distance = "bray")
+#
+# scores(nmds)
+# ordiplot(example_NMDS,type="n")
+# orditorp(example_NMDS,display="species",col="red",air=0.01)
+# orditorp(example_NMDS,display="sites",cex=1.25,air=0.01)
 
 # Create a list of NMDS results for each data frame in bact_fung_taxa
-nmds_list <- lapply(top10_taxa, function(df) {
+nmds_list <- lapply(top10_taxa_d, function(df) {
   metaMDS(df, distance = "bray")
 })
 
 # Access and plot the scores for each NMDS result
-scores_list <- lapply(nmds, scores)
+scores_list <- lapply(nmds_list, scores)
 
 # Create empty plots for each NMDS result
-plot_list <- lapply(nmds, function(nmds) {
+plot_list <- lapply(nmds_list, function(nmds) {
   ordiplot(nmds, type = "n")
 })
 
 # Add species labels to each plot
-plot_list <- lapply(seq_along(nmds), function(i) {
-  orditorp(nmds[[i]], display = "species", col = "red", air = 0.01)
+plot_list <- lapply(seq_along(nmds_list), function(i) {
+  orditorp(nmds_list[[i]], display = "species", col = "red", air = 0.01)
 })
 
 # Add site labels to each plot
-plot_list <- lapply(seq_along(nmds), function(i) {
-  orditorp(nmds[[i]], display = "sites", cex = 1.25, air = 0.01)
+plot_list <- lapply(seq_along(nmds_list), function(i) {
+  orditorp(nmds_list[[i]], display = "sites", cex = 1.25, air = 0.01)
 })
+
+# Combine the individual plots into a single composite plot
+composite_plot <- plot_grid(plotlist = plot_list, ncol = 2)  # Adjust ncol as needed
+
+# Save the composite plot to an image file (e.g., a PNG file)
+ggsave("output_plot.png", composite_plot, width = 10, height = 6)
+
+# You can specify the width and height as per your preference
 
 
 # Diversidade
@@ -342,7 +352,7 @@ barplot_list <- setNames(lapply(names(tidy_data2), function(list_name) {
   df <- tidy_data2[[list_name]]
   repla <- gsub(".*_", "", list_name)
   df_filtered <- df %>% filter(Percent != 0)
-  ggplot(df_filtered, aes(x = .data[[repla]], y = Percent, fill = Sample)) +
+  ggplot(df_filtered, aes(x = Sample, y = Percent, fill = .data[[repla]])) +
     geom_bar(position="fill", stat="identity") +
     labs(x = paste(toTitleCase(repla), "es", sep=""), y = "Average percentage of reads", fill = "Samples") +
     theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 4.5),
