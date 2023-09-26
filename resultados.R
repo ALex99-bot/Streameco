@@ -1,5 +1,5 @@
-directory <- "/home/pedro/PycharmProjects/Streameco"
-# directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
+# directory <- "/home/pedro/PycharmProjects/Streameco"
+directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
 # directory <-"C:/Users/asus/Desktop/Streameco"
 setwd(directory)
 
@@ -308,8 +308,15 @@ nmds_list <- lapply(top10_taxa_d, function(df) {
   metaMDS(df, distance = "bray")
 })
 
+par(mfrow=c(3, 4))
 # Access and plot the scores for each NMDS result
 scores_list <- lapply(nmds_list, scores)
+
+for (x in seq_along(nmds_list)) {
+  ordiplot(nmds_list[[x]])
+  orditorp(nmds_list[[x]], display = "species", col = "red", air = 0.01)
+  orditorp(nmds_list[[x]], display = "sites", cex = 1.25, air = 0.01)
+}
 
 # Create empty plots for each NMDS result
 plot_list <- lapply(nmds_list, function(nmds) {
@@ -328,6 +335,9 @@ plot_list <- lapply(seq_along(nmds_list), function(i) {
 
 # Combine the individual plots into a single composite plot
 composite_plot <- plot_grid(plotlist = plot_list, ncol = 2)  # Adjust ncol as needed
+
+cor(env_data[[]])
+
 
 # Save the composite plot to an image file (e.g., a PNG file)
 ggsave("output_plot.png", composite_plot, width = 10, height = 6)
