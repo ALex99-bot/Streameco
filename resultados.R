@@ -1,5 +1,5 @@
-# directory <- "/home/pedro/PycharmProjects/Streameco"
-directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
+directory <- "/home/pedro/PycharmProjects/Streameco"
+# directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
 # directory <-"C:/Users/asus/Desktop/Streameco"
 setwd(directory)
 
@@ -117,7 +117,10 @@ simpson_index <- lapply(bact_fung_taxa[-c(2, 5, 6, 8, 11, 12)], function(x) dive
 PCA_env <- dudi.pca(env_data, center = TRUE, scale = TRUE, nf=5, scannf = FALSE)
 
 # PCA_env <- rep(list(dudi.pca(env_data, center = TRUE, scale = TRUE, nf=5, scannf = FALSE)), times = 12)
+png("biplot.png", width = 800, height = 600)
 biplot(PCA_env)
+dev.off()
+
 s.arrow(PCA_env$c1, lab=names(PCA_env$tab))
 var_exp <- (PCA_env$eig*100)/sum(PCA_env$eig)
 
@@ -304,19 +307,31 @@ ggsave("modelo_bacterias.png", bacterias_modelo, width = 8, height = 6, dpi = 30
 # orditorp(example_NMDS,display="sites",cex=1.25,air=0.01)
 
 # Create a list of NMDS results for each data frame in bact_fung_taxa
+# Set the output file format and name (PNG)
+# Change "nmds_plots" to your desired file name (without the extension)
+
 nmds_list <- lapply(top10_taxa_d, function(df) {
   metaMDS(df, distance = "bray")
 })
 
-par(mfrow=c(3, 4))
 # Access and plot the scores for each NMDS result
 scores_list <- lapply(nmds_list, scores)
 
 for (x in seq_along(nmds_list)) {
+  # Open a new PNG graphics device for each plot
+  png(paste0(directory, "nmds_plot_", names(nmds_list)[x], ".png"), width = 800, height = 600)  # Adjust width and height as needed
+
   ordiplot(nmds_list[[x]])
   orditorp(nmds_list[[x]], display = "species", col = "red", air = 0.01)
   orditorp(nmds_list[[x]], display = "sites", cex = 1.25, air = 0.01)
+
+  # Add a title to each plot (optional)
+  # title(main = paste("NMDS Plot", names(nmds_list)[x]))
+
+  # Close the PNG graphics device
+  dev.off()
 }
+
 
 # Create empty plots for each NMDS result
 plot_list <- lapply(nmds_list, function(nmds) {
@@ -336,7 +351,6 @@ plot_list <- lapply(seq_along(nmds_list), function(i) {
 # Combine the individual plots into a single composite plot
 composite_plot <- plot_grid(plotlist = plot_list, ncol = 2)  # Adjust ncol as needed
 
-cor(env_data[[]])
 
 
 # Save the composite plot to an image file (e.g., a PNG file)
