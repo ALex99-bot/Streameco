@@ -364,7 +364,7 @@ barplot_list <- setNames(lapply(names(tidy_data2), function(list_name) {
   df_filtered <- df %>% filter(Percent != 0)
   ggplot(df_filtered, aes(x = Sample, y = Percent, fill = .data[[repla]])) +
     geom_bar(position="fill", stat="identity") +
-    labs(x = paste(toTitleCase(repla), "es", sep=""), y = "Average percentage of reads", fill = "Samples") +
+    labs(x = "Samples", y = "Average percentage of reads", fill = paste(toTitleCase(repla), "es", sep="")) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 4.5),
       #legend.position = "bottom",
       legend.text = element_text(size = 8,       # Adjust the font size of the legend text (set to 8 or adjust as needed)
