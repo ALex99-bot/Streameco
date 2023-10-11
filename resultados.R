@@ -1,5 +1,5 @@
-directory <- "/home/pedro/PycharmProjects/Streameco"
-# directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
+# directory <- "/home/pedro/PycharmProjects/Streameco"
+directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
 # directory <-"C:/Users/asus/Desktop/Streameco"
 setwd(directory)
 
@@ -62,6 +62,7 @@ excel2dataframe_total <- function(x) {
   x <- as.data.frame(x)
 }
 
+bact_fung_taxa_total <- lapply(read_excel_sheets(path, file), excel2dataframe_total)
 bact_fung_taxa <- lapply(read_excel_sheets(path, file), excel2dataframe)
 # bact_fung_taxa_less10 <- lapply(read_excel_sheets(less10_path, less10), excel2dataframe)
 sem_cutoff_taxa <- lapply(read_excel_sheets(sem_cutoff_path, sem_cutoff), excel2dataframe_total)
@@ -314,6 +315,12 @@ nmds_list <- lapply(top10_taxa_d, function(df) {
   metaMDS(df, distance = "bray")
 })
 
+lapply(nmds_list, stressplot)
+# result_list <- lapply(nmds_list, function(nmds_data) {
+#   envfit_result <- envfit(nmds_data, env_data)
+#   return(envfit_result)
+# })
+
 # Access and plot the scores for each NMDS result
 scores_list <- lapply(nmds_list, scores)
 
@@ -402,3 +409,65 @@ for(i in seq_along(barplot_list)) {
 }
 
 
+# Diversidade - total
+tidy_data <- setNames(
+  lapply(names(bact_fung_taxa_total), function(list_name) {
+    lista <- bact_fung_taxa_total[[list_name]]
+    gathered_data <- pivot_longer(lista, cols = -1, names_to = "Sample", values_to = "Percent")
+    attr(gathered_data, "original_name") <- list_name  # Store the original name as an attribute
+    return(gathered_data)
+  }),
+  names(bact_fung_taxa_total)
+)
+
+tidy_data2 <- tidy_data[c(3, 9)]
+names(tidy_data2) <- c("Bacteria_species", "Fungi_species")
+
+barplot_list <- setNames(lapply(names(tidy_data2), function(list_name) {
+  df <- tidy_data2[[list_name]]
+  repla <- gsub(".*_", "", list_name)
+  df_filtered <- df %>% filter(Percent != 0)
+  ggplot(df_filtered, aes(x = Sample, y = Percent, fill = .data[[repla]])) +
+    geom_bar(position="fill", stat="identity") +
+    labs(x = "Samples", y = "Average percentage of reads", fill = paste(toTitleCase(repla), "es", sep="")) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 4.5),
+      #legend.position = "bottom",
+      legend.text = element_text(size = 8,       # Adjust the font size of the legend text (set to 8 or adjust as needed)
+                               hjust = 0.5,     # Center the text horizontally in the legend key
+                               vjust = 0.5)) +
+    guides(fill = guide_legend(label.hjust = 0.5, label.vjust = 0.5)) +
+    scale_y_continuous(labels = percent_format(scale = 100)) # Set y-axis labels as percentages
+}), names(tidy_data2))
+
+
+barplot_list <- setNames(lapply(seq_along(tidy_data2), function(i) {
+  df <- tidy_data2[[i]]
+  repla <- gsub(".*_", "", names(tidy_data2)[i])
+  df_filtered <- df %>% filter(Percent != 0)
+  ggplot(df_filtered, aes(x = Sample, y = Percent, fill = .data[[repla]])) +
+    geom_bar(position="fill", stat="identity") +
+    labs(x = "Samples", y = "Average percentage of reads", fill = paste(toTitleCase(repla), "es", sep="")) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 4.5),
+      #legend.position = "bottom",
+      legend.text = element_text(size = 8,       # Adjust the font size of the legend text (set to 8 or adjust as needed)
+                               hjust = 0.5,     # Center the text horizontally in the legend key
+                               vjust = 0.5)) +
+    guides(fill = guide_legend(label.hjust = 0.5, label.vjust = 0.5)) +
+    scale_y_continuous(labels = percent_format(scale = 100)) # Set y-axis labels as percentages
+}), 1:length(tidy_data2))
+
+
+
+
+
+
+# Print the bar plots
+print(barplot_list[[1]]) # Print the first bar plot
+print(barplot_list[[2]]) # Print the second bar plot
+
+
+# Save each plot with a unique filename based on the original name of the data frame
+for(i in seq_along(barplot_list)) {
+  filename <- paste0(directory, attr(tidy_data[[i]], "original_name"), ".png")
+  ggsave(filename, plot = barplot_list[[i]], width = 8, height = 5.2, dpi = 300)  # Adjust width and height as needed
+}
