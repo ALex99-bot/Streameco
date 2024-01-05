@@ -1,5 +1,5 @@
-directory <- "/home/pedro/PycharmProjects/Streameco"
-# directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
+# directory <- "/home/pedro/PycharmProjects/Streameco"
+directory <- "C:/Users/pedro/OneDrive/Ambiente de Trabalho/Streameco"
 # directory <-"C:/Users/asus/Desktop/Streameco"
 setwd(directory)
 
@@ -251,7 +251,7 @@ plot_ppo4 <- ggplot(modelos, aes(x = P.PO4, y = Fungi_species_shannon)) +
 plot_tmax <- ggplot(modelos, aes(x = Tmax, y = Fungi_species_diversidade)) +
   geom_point() +
   geom_line(aes(y = predicted_div_tmax)) +
-  labs(x = "Thermal stress (ºC)", y = "S") # +
+  labs(x = "Thermal stress (\u00B0C)", y = "S") # +
   # ggtitle("Fungi_species_div ~ cond")
 
 plot_din <- ggplot(modelos, aes(x = DIN, y = Fungi_species_diversidade)) +
@@ -261,13 +261,13 @@ plot_din <- ggplot(modelos, aes(x = DIN, y = Fungi_species_diversidade)) +
   # ggtitle("Fungi_species_div ~ cond")
 
 # Combine all the plots into a single image
-combined_plot <- grid.arrange(plot_PC1, plot_alt, plot_500m, plot_cond, ncol = 2)
-combined_plot2 <- grid.arrange(plot_vel, plot_domin, plot_ppo4, plot_tmax, ncol = 2)
+combined_plot <- grid.arrange(plot_PC1, plot_alt, plot_500m, plot_cond, plot_vel, plot_domin, plot_tmax, plot_din, ncol = 2)
+# combined_plot2 <- grid.arrange(plot_vel, plot_domin, plot_ppo4, plot_tmax, ncol = 2)
 
 # Save the combined plot as an image
-ggsave("modelos_fungos.png", combined_plot, width = 10, height = 8, dpi = 300)
-ggsave("modelos_fungos2.png", combined_plot2, width = 10, height = 8, dpi = 300)
-ggsave("fung_div_din.png", plot_din, width = 10, height = 8, dpi = 300)
+ggsave("modelos_fungos_div.png", combined_plot, width = 10, height = 8, dpi = 300)
+# ggsave("modelos_fungos2.png", combined_plot2, width = 10, height = 8, dpi = 300)
+ggsave("fung_shannon_ppo4.png", plot_ppo4, width = 10, height = 8, dpi = 300)
 
 # png("modelos_fungos.png")
 #   # Fungi_species_div ~ PC1
@@ -350,7 +350,7 @@ bacterias_vel_shannon <- ggplot(modelos, aes(mean.Velocity, Bacteria_species_sha
 plot_tmax_bact <- ggplot(modelos, aes(x = Tmax, y = Bacteria_species_diversidade)) +
   geom_point() +
   geom_line(aes(y = predicted_div_tmax_bact)) +
-  labs(x = "Thermal stress (ºC)", y = "S")
+  labs(x = "Thermal stress (\u00B0C)", y = "S")
 
 ggsave("bacterias_vel_shannon.png", bacterias_vel_shannon, width = 8, height = 6, dpi = 300)
 ggsave("bact_div_tmax.png", plot_tmax_bact, width = 8, height = 6, dpi = 300)
