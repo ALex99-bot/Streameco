@@ -119,8 +119,9 @@ PCA_env <- dudi.pca(env_data, center = TRUE, scale = TRUE, nf=5, scannf = FALSE)
 
 # PCA_env <- rep(list(dudi.pca(env_data, center = TRUE, scale = TRUE, nf=5, scannf = FALSE)), times = 12)
 png("biplot.png", width = 800, height = 600)
-biplot(PCA_env)
+fviz_pca_biplot(PCA_env, title = NULL)
 dev.off()
+
 
 s.arrow(PCA_env$c1, lab=names(PCA_env$tab))
 var_exp <- (PCA_env$eig*100)/sum(PCA_env$eig)
@@ -177,11 +178,32 @@ fungi_div_500m <- nls(Fungi_species_diversidade ~ NLS.expoDecay(LUI_500m, a, k),
 # Fungi_species_div ~ cond
 fung_div_cond <- nls(Fungi_species_diversidade ~ NLS.expoDecay(cond, a, k), data = modelos)
 
+# Fungi_species_div ~ DOmin
+fung_div_domin <- nls(Fungi_species_diversidade ~ NLS.expoGrowth(DOmin, a, k), data = modelos)
+
+# Fungi_species_div ~ mean.Velocity
+fung_div_vel <- nls(Fungi_species_diversidade ~ NLS.expoDecay(mean.Velocity, a, k), data = modelos)
+
+# Fungi_species_div ~ P.PO4
+fung_shannon_ppo4 <- nls(Fungi_species_shannon ~ NLS.expoDecay(P.PO4, a, k), data = modelos)
+
+# Fungi_species_div ~ Tmax
+fung_div_tmax <- nls(Fungi_species_diversidade ~ NLS.expoDecay(Tmax, a, k), data = modelos)
+
+# Fungi_species_div ~ DIN
+fung_div_din <- nls(Fungi_species_diversidade ~ NLS.expoDecay(DIN, a, k), data = modelos)
+
 # Generate predicted values from the models
 modelos$predicted_div_PC1 <- predict(Fungi_div_PC1)
 modelos$predicted_div_alt <- predict(fungi_div_alt)
 modelos$predicted_div_500m <- predict(fungi_div_500m)
 modelos$predicted_div_cond <- predict(fung_div_cond)
+modelos$predicted_div_domin <- predict(fung_div_domin)
+modelos$predicted_div_vel <- predict(fung_div_vel)
+modelos$predicted_shannon_ppo4  <- predict(fung_shannon_ppo4)
+modelos$predicted_div_tmax <- predict(fung_div_tmax)
+modelos$predicted_div_din <- predict(fung_div_din)
+
 
 # Create individual plots for each model
 plot_PC1 <- ggplot(modelos, aes(x = PC1, y = Fungi_species_diversidade)) +
@@ -208,12 +230,44 @@ plot_cond <- ggplot(modelos, aes(x = cond, y = Fungi_species_diversidade)) +
   labs(x = "Conductivity (\u03BCS/cm)", y = "S") # +
   # ggtitle("Fungi_species_div ~ cond")
 
+plot_domin <- ggplot(modelos, aes(x = DOmin, y = Fungi_species_diversidade)) +
+  geom_point() +
+  geom_line(aes(y = predicted_div_domin)) +
+  labs(x = expression(paste("Minimum dissolved oxygen (mg ", "L"^-1, ")")), y = "S") # +
+  # ggtitle("Fungi_species_div ~ cond")
+
+plot_vel <- ggplot(modelos, aes(x = mean.Velocity, y = Fungi_species_diversidade)) +
+  geom_point() +
+  geom_line(aes(y = predicted_div_vel)) +
+  labs(x = expression(paste("Mean velocity (m ", "s"^-1, ")")), y = "S") # +
+  # ggtitle("Fungi_species_div ~ cond")
+
+plot_ppo4 <- ggplot(modelos, aes(x = P.PO4, y = Fungi_species_shannon)) +
+  geom_point() +
+  geom_line(aes(y = predicted_shannon_ppo4)) +
+  labs(x = expression(paste("Phosphorus (mg ", "L"^-1, ")")), y = "H'") # +
+  # ggtitle("Fungi_species_div ~ cond")
+
+plot_tmax <- ggplot(modelos, aes(x = Tmax, y = Fungi_species_diversidade)) +
+  geom_point() +
+  geom_line(aes(y = predicted_div_tmax)) +
+  labs(x = "Thermal stress (ºC)", y = "S") # +
+  # ggtitle("Fungi_species_div ~ cond")
+
+plot_din <- ggplot(modelos, aes(x = DIN, y = Fungi_species_diversidade)) +
+  geom_point() +
+  geom_line(aes(y = predicted_div_din)) +
+  labs(x = expression(paste("Nutrient enrichment (DIN) (mg ", "L"^-1, ")")), y = "S") # +
+  # ggtitle("Fungi_species_div ~ cond")
+
 # Combine all the plots into a single image
 combined_plot <- grid.arrange(plot_PC1, plot_alt, plot_500m, plot_cond, ncol = 2)
+combined_plot2 <- grid.arrange(plot_vel, plot_domin, plot_ppo4, plot_tmax, ncol = 2)
 
 # Save the combined plot as an image
 ggsave("modelos_fungos.png", combined_plot, width = 10, height = 8, dpi = 300)
-
+ggsave("modelos_fungos2.png", combined_plot2, width = 10, height = 8, dpi = 300)
+ggsave("fung_div_din.png", plot_din, width = 10, height = 8, dpi = 300)
 
 # png("modelos_fungos.png")
 #   # Fungi_species_div ~ PC1
@@ -241,14 +295,14 @@ ggsave("modelos_fungos.png", combined_plot, width = 10, height = 8, dpi = 300)
 #
   # Fungi_species_div ~ LUI_500m
   # par(mfrow = c(1, 1))
-  plot_nls(fungi_div_500m, ylab = "S")
-  r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_500m)$PseudoR2, digits = 4))))
-  pval <- bquote(paste(bold("p-value: " == .(format(summary(fungi_div_500m)$coefficients[2,4], digits = 5)))))
-  mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
-  mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
-
-  par(mfrow = c(2, 2))
-  plot(nlsResiduals(fungi_div_500m), which = 0)
+  # plot_nls(fungi_div_500m, ylab = "S")
+  # r2 <- bquote(paste("R"^2 == .(format(R2nls(fungi_div_500m)$PseudoR2, digits = 4))))
+  # pval <- bquote(paste(bold("p-value: " == .(format(summary(fungi_div_500m)$coefficients[2,4], digits = 5)))))
+  # mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+  # mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+  #
+  # par(mfrow = c(2, 2))
+  # plot(nlsResiduals(fungi_div_500m), which = 0)
 #
 #   # Fungi_species_div ~ cond
 #   # par(mfrow = c(1, 2))
@@ -268,20 +322,38 @@ ggsave("modelos_fungos.png", combined_plot, width = 10, height = 8, dpi = 300)
 # Bacteria_species_shannon ~ mean.Velocity
 bact_shannon_mv <- nls(Bacteria_species_shannon ~ SSgauss(mean.Velocity, mu, sigma, h), data = modelos)
 
-# modelos_retirado |>
-#   ggplot(aes(mean.Velocity, Bacteria_species_shannon)) +
-#   geom_point() +
-#   geom_text_repel(aes(label = rownames(modelos_retirado)))
+# Bacteria_species_shannon ~ Tmax
+bact_div_tmax <- nls(Bacteria_species_diversidade ~ NLS.expoDecay(Tmax, a, k), data = modelos)
+
+modelos$predicted_div_tmax_bact <- predict(bact_div_tmax)
+# modelos |>
+#   ggplot(aes(Tmax, Bacteria_species_diversidade)) +
+#   geom_point()
+#
+# par(mfrow = c(1, 1))
+# plot_nls(fung_shannon_tmax, ylab = "S")
+# r2 <- bquote(paste("R"^2 == .(format(R2nls(fung_shannon_tmax)$PseudoR2, digits = 4))))
+# pval <- bquote(paste(bold("p-value: " == .(format(summary(fung_shannon_tmax)$coefficients[2,4], digits = 5)))))
+# mtext(r2, line=-2.5, adj = 0.9, cex = 1.2, font = 2)
+# mtext(pval, line=-3.5, adj = 0.9, cex = 1.2, font = 2)
+#
+# par(mfrow = c(2, 2))
+# plot(nlsResiduals(fung_shannon_tmax), which = 0)
 
 # Create the ggplot
-bacterias_modelo <- ggplot(modelos, aes(mean.Velocity, Bacteria_species_shannon)) +
+bacterias_vel_shannon <- ggplot(modelos, aes(mean.Velocity, Bacteria_species_shannon)) +
   geom_point() +
   stat_smooth(method = "nls", formula = y ~ SSgauss(x, mu, sigma, h), method.args = list(start = coef(bact_shannon_mv)), se = FALSE) +
-  labs(x = "Mean velocity (m s^-1)", y = "H'") #+
+  labs(x = expression(paste("Mean velocity (m ", "s"^-1, ")")), y = "H'")
   #theme_minimal()
 
-ggsave("modelo_bacterias.png", bacterias_modelo, width = 8, height = 6, dpi = 300)
+plot_tmax_bact <- ggplot(modelos, aes(x = Tmax, y = Bacteria_species_diversidade)) +
+  geom_point() +
+  geom_line(aes(y = predicted_div_tmax_bact)) +
+  labs(x = "Thermal stress (ºC)", y = "S")
 
+ggsave("bacterias_vel_shannon.png", bacterias_vel_shannon, width = 8, height = 6, dpi = 300)
+ggsave("bact_div_tmax.png", plot_tmax_bact, width = 8, height = 6, dpi = 300)
 
 # modelos_retirado |>
 #   ggplot(aes(mean.Velocity, Bacteria_species_shannon)) +
@@ -365,6 +437,40 @@ ggsave("output_plot.png", composite_plot, width = 10, height = 6)
 
 # You can specify the width and height as per your preference
 
+# Create a mapping of singular to plural forms
+plural_mapping <- c("genus" = "genera", "order" = "orders", "species" = "species",
+                    "family" = "families", "phylum" = "phyla", "class" = "classes")
+
+# Function to update the names of list elements
+update_names_in_list <- function(lst, mapping) {
+  new_names <- lapply(names(lst), function(name) {
+    parts <- unlist(strsplit(name, "_"))
+    singular <- parts[length(parts)]
+    plural <- mapping[singular]
+    if (!is.na(plural)) {
+      parts[length(parts)] <- plural
+      return(paste(parts, collapse = "_"))
+    } else {
+      return(name)
+    }
+  })
+
+  # Loop through list elements and update the first column name
+  for (i in seq_along(lst)) {
+    singular <- unlist(strsplit(names(lst)[i], "_"))[length(unlist(strsplit(names(lst)[i], "_")))]
+    plural <- mapping[singular]
+    if (!is.na(plural)) {
+      colnames(lst[[i]])[1] <- plural
+    }
+  }
+
+  names(lst) <- new_names
+  return(lst)
+}
+
+# Apply the function to your list
+top10_taxa <- update_names_in_list(top10_taxa, plural_mapping)
+
 
 # Diversidade
 tidy_data <- setNames(
@@ -377,15 +483,13 @@ tidy_data <- setNames(
   names(top10_taxa)
 )
 
-tidy_data2 <- tidy_data[c(6, 12)]
-
-barplot_list <- setNames(lapply(names(tidy_data2), function(list_name) {
-  df <- tidy_data2[[list_name]]
+barplot_list <- setNames(lapply(names(tidy_data), function(list_name) {
+  df <- tidy_data[[list_name]]
   repla <- gsub(".*_", "", list_name)
   df_filtered <- df %>% filter(Percent != 0)
   ggplot(df_filtered, aes(x = Sample, y = Percent, fill = .data[[repla]])) +
     geom_bar(position="fill", stat="identity") +
-    labs(x = "Samples", y = "Average percentage of reads", fill = paste(toTitleCase(repla), "es", sep="")) +
+    labs(x = "Samples", y = "Average percentage of reads", fill = paste(toTitleCase(repla), sep="")) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 4.5),
       #legend.position = "bottom",
       legend.text = element_text(size = 8,       # Adjust the font size of the legend text (set to 8 or adjust as needed)
@@ -393,13 +497,11 @@ barplot_list <- setNames(lapply(names(tidy_data2), function(list_name) {
                                vjust = 0.5)) +
     guides(fill = guide_legend(label.hjust = 0.5, label.vjust = 0.5)) +
     scale_y_continuous(labels = percent_format(scale = 100)) # Set y-axis labels as percentages
-}), names(tidy_data2))
-
-
+}), names(tidy_data))
 
 # Print the bar plots
-print(barplot_list[[1]]) # Print the first bar plot
-print(barplot_list[[2]]) # Print the second bar plot
+# print(barplot_list[[1]]) # Print the first bar plot
+# print(barplot_list[[2]]) # Print the second bar plot
 
 
 # Save each plot with a unique filename based on the original name of the data frame
@@ -454,10 +556,7 @@ barplot_list <- setNames(lapply(seq_along(tidy_data2), function(i) {
                                vjust = 0.5)) +
     guides(fill = guide_legend(label.hjust = 0.5, label.vjust = 0.5)) +
     scale_y_continuous(labels = percent_format(scale = 100)) # Set y-axis labels as percentages
-}), 1:length(tidy_data2))
-
-
-
+}), seq_along(tidy_data2))
 
 
 
