@@ -260,13 +260,13 @@ plot_din <- ggplot(modelos, aes(x = DIN, y = Fungi_species_diversidade)) +
   # ggtitle("Fungi_species_div ~ cond")
 
 # Combine all the plots into a single image
-combined_plot <- grid.arrange(plot_PC1, plot_alt, plot_500m, plot_cond, plot_vel, plot_domin, plot_tmax, plot_din, ncol = 2)
+combined_plot <- grid.arrange(plot_PC1, plot_alt, plot_500m, plot_cond, plot_vel, plot_domin, plot_tmax, plot_din, plot_ppo4,ncol = 2)
 # combined_plot2 <- grid.arrange(plot_vel, plot_domin, plot_ppo4, plot_tmax, ncol = 2)
 
 # Save the combined plot as an image
-ggsave("modelos_fungos_div.png", combined_plot, width = 10, height = 8, dpi = 300)
+ggsave("modelos_fungos.png", combined_plot, width = 10, height = 8, dpi = 300)
 # ggsave("modelos_fungos2.png", combined_plot2, width = 10, height = 8, dpi = 300)
-ggsave("fung_shannon_ppo4.png", plot_ppo4, width = 10, height = 8, dpi = 300)
+#ggsave("fung_shannon_ppo4.png", plot_ppo4, width = 10, height = 8, dpi = 300)
 
 # png("modelos_fungos.png")
 #   # Fungi_species_div ~ PC1
@@ -351,8 +351,10 @@ plot_tmax_bact <- ggplot(modelos, aes(x = Tmax, y = Bacteria_species_diversidade
   geom_line(aes(y = predicted_div_tmax_bact)) +
   labs(x = "Thermal stress (\u00B0C)", y = "S")
 
-ggsave("bacterias_vel_shannon.png", bacterias_vel_shannon, width = 8, height = 6, dpi = 300)
-ggsave("bact_div_tmax.png", plot_tmax_bact, width = 8, height = 6, dpi = 300)
+
+combined_plot_bact <- grid.arrange(bacterias_vel_shannon, plot_tmax_bact, ncol = 2)
+ggsave("bact_models.png", combined_plot_bact, width = 8, height = 6, dpi = 300)
+# ggsave("bact_div_tmax.png", plot_tmax_bact, width = 8, height = 6, dpi = 300)
 
 # modelos_retirado |>
 #   ggplot(aes(mean.Velocity, Bacteria_species_shannon)) +
