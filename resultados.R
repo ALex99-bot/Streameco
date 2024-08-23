@@ -117,7 +117,7 @@ simpson_index <- lapply(bact_fung_taxa[-c(2, 5, 6, 8, 11, 12)], function(x) dive
 PCA_env <- dudi.pca(env_data, center = TRUE, scale = TRUE, nf=5, scannf = FALSE)
 
 # PCA_env <- rep(list(dudi.pca(env_data, center = TRUE, scale = TRUE, nf=5, scannf = FALSE)), times = 12)
-png("biplot.png", width = 800, height = 600)
+png("biplot_apres.png", width = 1600, height = 1200, res = 150)
 fviz_pca_biplot(PCA_env, title = NULL)
 dev.off()
 
@@ -208,63 +208,93 @@ modelos$predicted_div_din <- predict(fung_div_din)
 plot_PC1 <- ggplot(modelos, aes(x = PC1, y = Fungi_species_diversidade)) +
   geom_point() +
   geom_line(aes(y = predicted_div_PC1)) +
-  labs(x = "PC1", y = "S") # +
+  labs(x = "PC1", y = "S") +
+  theme(
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16)
+  )
+ # +
   # ggtitle("Fungi_species_div ~ PC1")
 
 plot_alt <- ggplot(modelos, aes(x = Altitude, y = Fungi_species_diversidade)) +
   geom_point() +
   geom_line(aes(y = predicted_div_alt)) +
-  labs(x = "Altitude (m)", y = "S") # +
-  # ggtitle("Fungi_species_div ~ alt")
+  labs(x = "Altitude (m)", y = "S") +
+  theme(
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16)
+  )
 
 plot_500m <- ggplot(modelos, aes(x = LUI_500m, y = Fungi_species_diversidade)) +
   geom_point() +
   geom_line(aes(y = predicted_div_500m)) +
-  labs(x = "LUI", y = "S") # +
-  # ggtitle("Fungi_species_div ~ LUI_500m")
+  labs(x = "LUI", y = "S") +
+  theme(
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16)
+  )
 
 plot_cond <- ggplot(modelos, aes(x = cond, y = Fungi_species_diversidade)) +
   geom_point() +
   geom_line(aes(y = predicted_div_cond)) +
-  labs(x = "Conductivity (\u03BCS/cm)", y = "S") # +
-  # ggtitle("Fungi_species_div ~ cond")
+  labs(x = "Conductivity (\u03BCS/cm)", y = "S") +
+  theme(
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16)
+  )
 
 plot_domin <- ggplot(modelos, aes(x = DOmin, y = Fungi_species_diversidade)) +
   geom_point() +
   geom_line(aes(y = predicted_div_domin)) +
-  labs(x = expression(paste("Minimum dissolved oxygen (mg ", "L"^-1, ")")), y = "S") # +
-  # ggtitle("Fungi_species_div ~ cond")
+  labs(x = expression(paste("Minimum dissolved oxygen (mg ", "L"^-1, ")")), y = "S") +
+  theme(
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16)
+  )
 
 plot_vel <- ggplot(modelos, aes(x = mean.Velocity, y = Fungi_species_diversidade)) +
   geom_point() +
   geom_line(aes(y = predicted_div_vel)) +
-  labs(x = expression(paste("Mean velocity (m ", "s"^-1, ")")), y = "S") # +
-  # ggtitle("Fungi_species_div ~ cond")
+  labs(x = expression(paste("Mean velocity (m ", "s"^-1, ")")), y = "S") +
+  theme(
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16)
+  )
 
 plot_ppo4 <- ggplot(modelos, aes(x = P.PO4, y = Fungi_species_shannon)) +
   geom_point() +
   geom_line(aes(y = predicted_shannon_ppo4)) +
-  labs(x = expression(paste("Phosphorus (mg ", "L"^-1, ")")), y = "H'") # +
-  # ggtitle("Fungi_species_div ~ cond")
+  labs(x = expression(paste("Phosphorus (mg ", "L"^-1, ")")), y = "H'") +
+  theme(
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16)
+  )
 
 plot_tmax <- ggplot(modelos, aes(x = Tmax, y = Fungi_species_diversidade)) +
   geom_point() +
   geom_line(aes(y = predicted_div_tmax)) +
-  labs(x = "Thermal stress (\u00B0C)", y = "S") # +
-  # ggtitle("Fungi_species_div ~ cond")
+  labs(x = "Thermal stress (\u00B0C)", y = "S") +
+  theme(
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16)
+  )
 
 plot_din <- ggplot(modelos, aes(x = DIN, y = Fungi_species_diversidade)) +
   geom_point() +
   geom_line(aes(y = predicted_div_din)) +
-  labs(x = expression(paste("Nutrient enrichment (DIN) (mg ", "L"^-1, ")")), y = "S") # +
-  # ggtitle("Fungi_species_div ~ cond")
+  labs(x = expression(paste("Nutrient enrichment (DIN) (mg ", "L"^-1, ")")), y = "S") +
+  theme(
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16)
+  )
+
 
 # Combine all the plots into a single image
-combined_plot <- grid.arrange(plot_PC1, plot_alt, plot_500m, plot_cond, plot_vel, plot_domin, plot_tmax, plot_din, plot_ppo4,ncol = 2)
+combined_plot <- grid.arrange(plot_PC1, plot_500m, plot_din, plot_cond,plot_alt ,ncol = 2)
 # combined_plot2 <- grid.arrange(plot_vel, plot_domin, plot_ppo4, plot_tmax, ncol = 2)
 
 # Save the combined plot as an image
-ggsave("modelos_fungos.png", combined_plot, width = 10, height = 8, dpi = 300)
+ggsave("modelos_fungos_significativos.png", combined_plot, width = 10, height = 8, dpi = 300)
 # ggsave("modelos_fungos2.png", combined_plot2, width = 10, height = 8, dpi = 300)
 #ggsave("fung_shannon_ppo4.png", plot_ppo4, width = 10, height = 8, dpi = 300)
 
@@ -316,6 +346,42 @@ ggsave("modelos_fungos.png", combined_plot, width = 10, height = 8, dpi = 300)
 #
 # dev.off()
 
+# # Create PNG for model plots
+# png("modelos_significativos.png")
+# par(mfrow = c(4, 4))
+#
+# # Define a function to plot NLS models
+# plot_nls_model <- function(model, y_label) {
+#   plot_nls(model, ylab = y_label)
+#   r2 <- bquote(paste("R"^2 == .(format(R2nls(model)$PseudoR2, digits = 4))))
+#   pval <- bquote(paste(bold("p-value: " == .(format(summary(model)$coefficients[2,4], digits = 5)))))
+#   mtext(r2, line = -2.5, adj = 0.9, cex = 1.2, font = 2)
+#   mtext(pval, line = -3.5, adj = 0.9, cex = 1.2, font = 2)
+# }
+#
+# # List of models and labels
+# models <- list(
+#   Fungi_div_PC1 = Fungi_div_PC1,
+#   fungi_div_alt = fungi_div_alt,
+#   fungi_div_500m = fungi_div_500m,
+#   fung_div_cond = fung_div_cond,
+#   fung_div_domin = fung_div_domin,
+#   fung_div_vel = fung_div_vel,
+#   fung_shannon_ppo4 = fung_shannon_ppo4,
+#   fung_div_tmax = fung_div_tmax,
+#   fung_div_din = fung_div_din
+# )
+#
+# labels <- c(
+#   "S", "S", "S", "S", "S", "S", "Shannon", "S", "S"
+# )
+#
+# # Loop through each model and plot
+# for (i in seq_along(models)) {
+#   plot_nls_model(models[[i]], y_label = labels[i])
+# }
+#
+# dev.off()
 
 ########## Bactérias #############
 # Bacteria_species_shannon ~ mean.Velocity
@@ -343,17 +409,24 @@ modelos$predicted_div_tmax_bact <- predict(bact_div_tmax)
 bacterias_vel_shannon <- ggplot(modelos, aes(mean.Velocity, Bacteria_species_shannon)) +
   geom_point() +
   stat_smooth(method = "nls", formula = y ~ SSgauss(x, mu, sigma, h), method.args = list(start = coef(bact_shannon_mv)), se = FALSE) +
-  labs(x = expression(paste("Mean velocity (m ", "s"^-1, ")")), y = "H'")
-  #theme_minimal()
+  labs(x = expression(paste("Mean velocity (m ", "s"^-1, ")")), y = "H'") +
+  theme(
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16)
+  )
 
 plot_tmax_bact <- ggplot(modelos, aes(x = Tmax, y = Bacteria_species_diversidade)) +
   geom_point() +
   geom_line(aes(y = predicted_div_tmax_bact)) +
-  labs(x = "Thermal stress (\u00B0C)", y = "S")
+  labs(x = "Thermal stress (\u00B0C)", y = "S") +
+  theme(
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16)
+  )
 
 
-combined_plot_bact <- grid.arrange(bacterias_vel_shannon, plot_tmax_bact, ncol = 2)
-ggsave("bact_models.png", combined_plot_bact, width = 8, height = 6, dpi = 300)
+combined_plot_bact <- grid.arrange(bacterias_vel_shannon, ncol = 2)
+ggsave("bact_models_slides.png", bacterias_vel_shannon, width = 8, height = 6, dpi = 300)
 # ggsave("bact_div_tmax.png", plot_tmax_bact, width = 8, height = 6, dpi = 300)
 
 # modelos_retirado |>
